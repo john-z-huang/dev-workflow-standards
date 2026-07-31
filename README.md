@@ -14,6 +14,8 @@
 - **PR 合并后清理** — 标准化分支清理与 main 同步流程
 - **网络与认证排查** — `GH_TOKEN` 安全处理、代理环境下的认证排查顺序
 - **项目管理约定** — 以项目看板为唯一事实来源，禁止提前关闭 Issue 或更新状态
+- **禁止独占功能** — 禁用特定 Code Agent 的 Hooks 等专有功能，统一使用可移植的 Shell/Python 脚本实现自动化
+- **自动化案例** — 提供 PR 合并后清理等可移植 Python 脚本，附完整文档与集成说明
 
 ## 安装与使用
 
@@ -29,10 +31,20 @@
 
 ```
 dev-workflow-standards/
-├── SKILL.md        # Skill 定义与完整规范文档
-├── README.md       # 本文件
+├── SKILL.md                    # Skill 定义与完整规范文档
+├── README.md                   # 本文件
+├── scripts/
+│   └── pr-merge-cleanup.py     # PR 合并后清理脚本
+├── references/
+│   └── pr-merge-cleanup.md     # PR 合并后清理脚本使用说明
 └── .gitignore
 ```
+
+## 自动化脚本
+
+本 Skill 提供独立的、可移植的自动化脚本，遵循「清晰文档 + 通用脚本」模式（详见 SKILL.md 中「自动化案例」章节）。各脚本的完整使用说明存放于 `references/` 目录：
+
+- **`scripts/pr-merge-cleanup.py`** — PR 合并后自动清理：确认合并状态、同步 main、删除本地特性分支。用法：`python3 scripts/pr-merge-cleanup.py <PR编号>`（详见 [`references/pr-merge-cleanup.md`](./references/pr-merge-cleanup.md)）
 
 ## 规范要点速览
 

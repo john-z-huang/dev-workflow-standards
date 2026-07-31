@@ -3,7 +3,7 @@ name: dev-workflow-standards
 description: >-
   通用开发工作流规范：Git 分支命名与提交约定、禁止 Code Agent 署名、
   GitHub Issue/PR 流程、gh CLI 操作规范、GH_TOKEN 安全处理、网络与认证排查、
-  项目管理约定、中文文档与提交语言要求。适用于任何需要严格开发纪律的项目。
+  项目管理约定、禁止特定 Code Agent 独占功能、中文文档与提交语言要求。适用于任何需要严格开发纪律的项目。
 ---
 
 # 通用开发工作流规范
@@ -138,6 +138,33 @@ git branch -d <分支名称>
 
 ---
 
+## 禁止使用特定 Code Agent 独占功能
+
+不同的 Code Agent 产品提供了各自独有的扩展机制。这些功能仅在该特定产品下生效，其他 Code Agent 无法识别或执行，会破坏 Skill 的可移植性和通用性。
+
+### 禁止使用 Claude Code Hooks
+
+本 Skill 及引用本 Skill 的所有项目中：
+
+- **禁止**使用任何特定 Code Agent 的独占功能来实现自动化逻辑。
+- 若 Skill 中需要实现自动化脚本或事件触发功能，必须采用以下可移植方案：
+  1. **脚本实现**：在 `scripts/` 目录下创建独立的脚本文件（Shell 或 Python），具备清晰的入口、参数说明和错误处理，可在任何标准环境中运行。
+  2. **功能描述文档**：在 `references/` 目录下创建对应的描述文档（如 `references/<脚本名>.md`），完整说明功能目的、触发时机、用法示例、集成方式和退出码。
+  3. **Skill 文档引用**：在 `references/automation-index.md` 的脚本索引表格中新增一行，引用对应描述文档。
+- 选择脚本语言时优先考虑可移植性：Shell 脚本（`bash`/`sh`）适合简单的文件操作和命令编排；Python 脚本适合需要更复杂逻辑、数据处理或跨平台一致性的场景。
+
+- **禁止**使用 Claude Code 的 Hooks（事件钩子）、特定产品专有的配置文件格式、仅特定 Code Agent 可解析的工具绑定声明。
+
+**合规示例**：在 `scripts/pre-commit-check.sh` 中实现代码格式化检查逻辑，在 `references/pre-commit-check.md` 中说明用法和集成方式，并在 `references/automation-index.md` 脚本索引表格中引用该文档。
+
+**不合规示例**：在 Claude Code 的 Hooks 配置文件中声明提交前自动触发脚本，该配置仅对 Claude Code 生效，其他 Code Agent 无法感知或执行。
+
+#### 自动化功能索引
+
+所有自动化脚本的索引及其描述文档参见 [`references/automation-index.md`](./references/automation-index.md)。新增脚本时，在该文档的脚本索引表格中添加对应条目。
+
+---
+
 ## 附录：快速检查清单
 
 以下为通用检查项；各项目应在此基础上补充项目特有的检查项。
@@ -148,6 +175,14 @@ git branch -d <分支名称>
 - [ ] 已查阅项目看板或 Roadmap，确认条目状态、阶段和前置依赖
 - [ ] 已阅读与该功能相关的源码、测试和文档（不批量载入无关内容）
 - [ ] 变更方向与项目目标文档一致
+
+### 新增自动化功能前
+
+- [ ] 已确认所选方案不依赖任何特定 Code Agent 的独占功能（如 Hooks、专有配置格式等）
+- [ ] 脚本已创建于 `scripts/` 目录，具备清晰的入口、参数说明和错误处理
+- [ ] 功能描述文档已创建于 `references/` 目录，包含目的、触发时机、用法示例、集成方式和退出码
+- [ ] `references/automation-index.md` 脚本索引表格已新增对应条目，引用对应描述文档
+- [ ] 脚本可在任何标准环境中运行，不依赖特定 Code Agent 的运行时或插件
 
 ### 提交前
 
