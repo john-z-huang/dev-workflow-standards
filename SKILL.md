@@ -59,7 +59,7 @@ Code Agent 是辅助开发工具，不是真实的开发人员。Code Agent 不�
 
 ### GitHub 操作规范
 
-- 涉及 GitHub（包括 Issue、Pull Request、Projects、Actions、仓库信息或评论）前，必须先查阅 Codex 的 GitHub Skill，并遵循其中与当前任务相关的建议。
+- 涉及 GitHub（包括 Issue、Pull Request、Projects、Actions、仓库信息或评论）前，必须先查阅当前 Code Agent 提供的 GitHub Skill，并遵循其中与当前任务相关的建议。
 - 所有 GitHub 操作只能通过 GitHub CLI（`gh`）执行；绝对禁止通过浏览器或浏览器自动化工具操作 GitHub。
 
   **正确做法**：`gh issue create --title "..." --body "..."`、`gh pr create --title "..." --body "..."`。
