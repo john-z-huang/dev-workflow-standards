@@ -8,13 +8,15 @@
 
 - **Git 分支命名规范** — ASCII 字符、小写英文、类别前缀（`feat/`、`fix/`、`docs/`、`refactor/`、`agent/` 等）
 - **Push 前分支名检查** — 通过标准 Git `pre-push` hook 和正则表达式拦截特定产品名称
+- **Commit message 检查** — 通过标准 Git `commit-msg` hook 检查中文主题和禁止署名声明
+- **暂存区检查** — 通过标准 Git `pre-commit` hook 检查空白错误，并可运行项目测试
+- **Issue/PR 策略审计** — 通过 `gh` REST API 只读检查状态、关联关系和 base/head
 - **提交规范** — 以可独立验证的功能模块为提交边界，提交信息使用中文，测试通过后方可提交
 - **提交署名约束** — 禁止在提交信息、PR 描述等位置声明 Code Agent 署名（如 `Generated with`、`Co-Authored-By`）
 - **GitHub 操作流程** — 所有 GitHub 操作通过 `gh` CLI 执行，禁止浏览器操作
 - **Issue 与 PR 流程** — 功能/修复须先创建 Issue，通过 PR 合并并关联 Issue
 - **PR 合并后清理** — 标准化分支清理与 main 同步流程
 - **网络与认证排查** — `GH_TOKEN` 安全处理、代理环境下的认证排查顺序
-- **项目管理约定** — 以项目看板为唯一事实来源，禁止提前关闭 Issue 或更新状态
 - **禁止独占功能** — 禁用特定 Code Agent 的 Hooks 等专有功能，统一使用可移植的 Shell/Python 脚本实现自动化
 - **自动化案例** — 提供 PR 合并后清理等可移植 Python 脚本，附完整文档与集成说明
 
@@ -35,15 +37,27 @@ dev-workflow-standards/
 ├── SKILL.md                    # Skill 定义与完整规范文档
 ├── README.md                   # 本文件
 ├── .githooks/
-│   └── pre-push                # 调用分支名检查器的标准 Git hook
+│   ├── commit-msg              # 调用提交信息检查器
+│   ├── pre-commit              # 调用暂存区检查器
+│   └── pre-push                # 调用分支名检查器
 ├── scripts/
 │   ├── check-branch-name.py     # Push 前分支名检查脚本
+│   ├── check-commit-message.py   # Commit message 检查脚本
+│   ├── check-pr-policy.py        # Issue/PR 策略审计脚本
+│   ├── check-staged-changes.py   # 暂存区检查脚本
 │   └── pr-merge-cleanup.py     # PR 合并后清理脚本
 ├── references/
 │   ├── check-branch-name.md     # Push 前分支名检查使用说明
+│   ├── check-commit-message.md   # Commit message 检查使用说明
+│   ├── check-pr-policy.md        # Issue/PR 审计使用说明
+│   ├── check-staged-changes.md   # 暂存区检查使用说明
 │   └── pr-merge-cleanup.md     # PR 合并后清理脚本使用说明
 ├── tests/
-│   └── test_check_branch_name.py # 分支名检查测试
+│   ├── test_check_branch_name.py # 分支名检查测试
+│   ├── test_check_commit_message.py # Commit message 测试
+│   ├── test_check_pr_policy.py  # Issue/PR 审计测试
+│   ├── test_check_staged_changes.py # 暂存区检查测试
+│   └── test_pr_merge_cleanup.py # 合并后清理测试
 └── .gitignore
 ```
 
@@ -56,6 +70,9 @@ dev-workflow-standards/
 ### Push 前分支名检查
 
 - **`scripts/check-branch-name.py`** — 使用不区分大小写的正则表达式拦截特定产品名称。启用 hook：`git config core.hooksPath .githooks`；详见 [`references/check-branch-name.md`](./references/check-branch-name.md)。
+- **`scripts/check-commit-message.py`** — 在 `commit-msg` 阶段检查中文主题和禁止署名声明；详见 [`references/check-commit-message.md`](./references/check-commit-message.md)。
+- **`scripts/check-staged-changes.py`** — 在 `pre-commit` 阶段检查暂存区空白错误，可选运行测试；详见 [`references/check-staged-changes.md`](./references/check-staged-changes.md)。
+- **`scripts/check-pr-policy.py`** — 只读检查 Issue/PR 状态、关联关系和 base/head；详见 [`references/check-pr-policy.md`](./references/check-pr-policy.md)。
 
 ## 规范要点速览
 
@@ -66,6 +83,8 @@ agent/docs-branch-naming   ✅ 合规
 fix/batch-result-validation ✅ 合规
 feat/async-batch-submit    ✅ 合规
 agent/更新-git-规则         ❌ 含非 ASCII 字符
+main                       ✅ 受保护根分支
+feature/add-validation     ❌ 类别前缀不在允许列表
 feat/codex-integration      ❌ 含禁止的产品名称
 fix/CURSOR-timeout          ❌ 含禁止的产品名称（大小写不敏感）
 ```
@@ -80,9 +99,9 @@ feat: 批量处理、文档优化与代码清理         ❌ 混入多个不相�
 ### PR 合并后流程
 
 ```bash
-gh pr view <PR编号> --json state,mergedAt  # 确认已合并
-git checkout main                           # 切换到 main
-git pull origin main                        # 拉取更新
+gh pr view <PR编号> --json state,mergedAt,baseRefName,headRefName  # 确认已合并
+git switch main                                                 # 切换到 main
+git pull --ff-only origin main                                  # 拉取更新
 git branch -d <分支名称>                     # 删除本地分支
 ```
 
