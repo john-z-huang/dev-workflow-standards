@@ -2,11 +2,17 @@
 
 ## 功能描述
 
-`scripts/check-branch-name.py` 使用不区分大小写的正则表达式检查 Git 分支名称，拦截特定 Code Agent 产品名称。当前名单包括：
+`scripts/check-branch-name.py` 检查 Git 分支命名策略，包括根分支、类别前缀、ASCII/小写格式，以及特定 Code Agent 产品名称。产品名使用不区分大小写的正则表达式匹配，当前名单包括：
 
 `codex`、`claude`、`antigravity`、`opencode`、`cursor`、`copilot`、`cline`、`roo-code`、`roo_code`、`aider`、`continue`、`windsurf`、`devin`、`gemini`、`cody`、`junie`、`kiro`、`goose`、`augment`、`amazon-q` 和 `amazon_q`。
 
 名单集中定义在脚本的 `FORBIDDEN_AGENT_NAMES` 常量中。匹配为产品名子串匹配，例如 `feat/codex-api` 和 `fix/CURSOR-timeout` 都会被拦截。
+
+除 `main` 和 `master` 外，工作分支必须符合以下格式：
+
+```text
+^(?:agent|feat|fix|docs|refactor)/[a-z0-9]+(?:-[a-z0-9]+)*(?:/[a-z0-9]+(?:-[a-z0-9]+)*)*$
+```
 
 ## 触发时机
 
@@ -57,5 +63,5 @@ python3 scripts/check-branch-name.py --pre-push "$@"
 | 退出码 | 含义 |
 |--------|------|
 | 0 | 所有待检查的分支名称均通过 |
-| 1 | 至少一个分支名称命中禁止名称，push 应被阻止 |
+| 1 | 至少一个分支名称违反格式或命中禁止名称，push 应被阻止 |
 | 2 | 参数错误、无法确定当前分支或 pre-push 输入格式错误 |
