@@ -12,3 +12,5 @@
 
 # Memory files (session-specific)
 MEMORY.md
+
+__pycache__/
