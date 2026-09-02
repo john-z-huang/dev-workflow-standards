@@ -9,3 +9,4 @@
 | 脚本 | 描述文档 | 用途 |
 |------|----------|------|
 | `scripts/pr-merge-cleanup.py` | [`references/pr-merge-cleanup.md`](./pr-merge-cleanup.md) | PR 合并后确认状态、同步 main、删除本地特性分支 |
+| `scripts/check-branch-name.py` | [`references/check-branch-name.md`](./check-branch-name.md) | push 前使用正则表达式检查本地和远端分支名称，拦截特定产品名称 |
