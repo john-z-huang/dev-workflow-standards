@@ -26,10 +26,12 @@ description: >-
 - Git 分支名称必须只使用 ASCII 字符，不得包含中文或其他非 ASCII 字符，以避免终端、脚本、CI、URL 编码及跨平台协作中的兼容性问题。
 - 分支名称中的单词使用小写英文字母、数字和连字符（`-`）表示；需要表达层级时，仅可使用斜杠（`/`）分隔层级。
 - 分支名称应以清晰的类别前缀开始，例如 `agent/`、`feat/`、`fix/`、`docs/` 或 `refactor/`，并使用简短的英文描述说明变更内容。
+- 分支名称不得包含特定 Code Agent 产品名称。当前默认使用不区分大小写的正则表达式拦截 `codex`、`claude`、`antigravity`、`opencode`、`cursor`、`copilot`、`cline`、`roo-code`、`aider`、`continue`、`windsurf`、`devin`、`gemini`、`cody`、`junie`、`kiro`、`goose`、`augment` 和 `amazon-q` 等名称；名单由 `scripts/check-branch-name.py` 集中维护，可按团队需要扩展。
+- 向 GitHub 推送 patch 前，应启用标准 Git `pre-push` 检查。检查脚本命中禁止名称时返回非零退出码，Git 将阻止本次 push。
 
 **合规示例**：`agent/docs-branch-naming`、`fix/batch-result-validation`、`feat/async-batch-submit`。
 
-**不合规示例**（含中文或非 ASCII 字符）：`agent/更新-git-规则`、`修复/批处理校验`；**不合规示例**（前缀不明确）：`feature/分支命名`、`update-docs`。
+**不合规示例**（含中文或非 ASCII 字符）：`agent/更新-git-规则`、`修复/批处理校验`；**不合规示例**（前缀不明确）：`feature/分支命名`、`update-docs`；**不合规示例**（包含禁止的产品名称）：`feat/codex-integration`、`fix/CURSOR-timeout`。
 
 ### 堆叠 PR（Stacked PR）
 
@@ -241,6 +243,7 @@ git branch -d <head-branch>
 - [ ] 功能描述文档已创建于 `references/` 目录，包含目的、触发时机、用法示例、集成方式和退出码
 - [ ] `references/automation-index.md` 脚本索引表格已新增对应条目，引用对应描述文档
 - [ ] 脚本可在任何标准环境中运行，不依赖特定 Code Agent 的运行时或插件
+- [ ] 如脚本用于 Git 事件检查，已通过标准 Git hook 或人工流程接入，并完成正向、违规和边界场景验证
 
 ### 提交前
 
@@ -252,7 +255,8 @@ git branch -d <head-branch>
 
 ### 发起 PR 前
 
-- [ ] 分支名称符合规范（ASCII、小写、类别前缀）
+- [ ] 分支名称符合规范（ASCII、小写、类别前缀，且不包含禁止的产品名称）
+- [ ] 向 GitHub 推送 patch 前已启用标准 `pre-push` 分支名称检查
 - [ ] 如使用堆叠 PR，已明确核对 base 分支、head 分支及基础 PR，未意外指向 `main`
 - [ ] PR 描述中包含 `Closes #<Issue 编号>`（或等效关键字）
 - [ ] 已确认关联的 Issue 处于开放状态
