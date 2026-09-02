@@ -29,7 +29,6 @@ class CheckBranchNameTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0)
         self.assertEqual(result.stderr, "")
 
-
     def test_blocks_forbidden_name_case_insensitively(self) -> None:
         result = run_checker("Fix/CURSOR-timeout")
         self.assertEqual(result.returncode, 1)
@@ -41,7 +40,6 @@ class CheckBranchNameTests(unittest.TestCase):
             with self.subTest(product_name=product_name):
                 result = run_checker(f"feat/{product_name}-integration")
                 self.assertEqual(result.returncode, 1)
-
 
     def test_pre_push_checks_local_and_remote_branch_refs(self) -> None:
         result = run_checker(
@@ -56,7 +54,6 @@ class CheckBranchNameTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("antigravity-fix", result.stderr)
 
-
     def test_pre_push_allows_remote_branch_deletion(self) -> None:
         result = run_checker(
             "--pre-push",
@@ -70,7 +67,6 @@ class CheckBranchNameTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0)
         self.assertEqual(result.stderr, "")
 
-
     def test_rejects_malformed_pre_push_input(self) -> None:
         result = run_checker(
             "--pre-push",
@@ -80,6 +76,23 @@ class CheckBranchNameTests(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 2)
         self.assertIn("4 个字段", result.stderr)
+
+    def test_allows_protected_root_branch(self) -> None:
+        result = run_checker("main")
+        self.assertEqual(result.returncode, 0)
+
+    def test_blocks_invalid_branch_format(self) -> None:
+        for branch_name in (
+            "feature/add-validation",
+            "feat/Add-validation",
+            "feat/add_validation",
+            "update-docs",
+            "feat/add--validation",
+        ):
+            with self.subTest(branch_name=branch_name):
+                result = run_checker(branch_name)
+                self.assertEqual(result.returncode, 1)
+                self.assertIn("不符合策略", result.stderr)
 
 
 if __name__ == "__main__":

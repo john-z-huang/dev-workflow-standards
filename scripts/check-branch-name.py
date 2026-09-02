@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""在 Git push 前检查分支名中的特定产品名称。
+"""在 Git push 前检查分支名称策略。
 
 该脚本可直接作为 Git ``pre-push`` 检查器调用，也可以手动传入一个或多个
-分支名称进行检查。脚本只依赖 Python 标准库和 Git 本身，不依赖任何特定
+分支名称进行检查。脚本检查根分支、类别前缀、ASCII/小写命名规则，以及
+禁止的产品名称。脚本只依赖 Python 标准库和 Git 本身，不依赖任何特定
 Code Agent 的运行时或配置格式。
 
 用法:
@@ -11,7 +12,7 @@ Code Agent 的运行时或配置格式。
 
 退出码:
     0  所有待推送分支名称均通过检查
-    1  分支名称命中禁止名称
+    1  分支名称不符合策略
     2  参数、Git 状态或 pre-push 输入无效
 """
 
@@ -55,11 +56,34 @@ FORBIDDEN_AGENT_NAME_PATTERN = re.compile(
     re.IGNORECASE,
 )
 
+# main/master 是受保护的根分支，不要求带类别前缀；其他工作分支必须使用
+# 文档中规定的类别前缀，并且每一级只允许小写字母、数字和连字符。
+ROOT_BRANCH_NAMES = frozenset({"main", "master"})
+WORK_BRANCH_PATTERN = re.compile(
+    r"^(?:agent|feat|fix|docs|refactor)/"
+    r"[a-z0-9]+(?:-[a-z0-9]+)*"
+    r"(?:/[a-z0-9]+(?:-[a-z0-9]+)*)*$"
+)
+
 
 def find_forbidden_names(branch_name: str) -> tuple[str, ...]:
     """返回分支名中命中的禁止名称，大小写不敏感且去重。"""
     matches = (match.group(0).lower() for match in FORBIDDEN_AGENT_NAME_PATTERN.finditer(branch_name))
     return tuple(dict.fromkeys(matches))
+
+
+def find_branch_policy_errors(branch_name: str) -> tuple[str, ...]:
+    """返回分支名称违反的策略项。"""
+    errors: list[str] = []
+
+    if branch_name not in ROOT_BRANCH_NAMES and not WORK_BRANCH_PATTERN.fullmatch(branch_name):
+        errors.append("必须是 main/master，或使用允许的类别前缀和小写连字符格式")
+
+    matches = find_forbidden_names(branch_name)
+    if matches:
+        errors.append(f"包含禁止的产品名: {', '.join(matches)}")
+
+    return tuple(errors)
 
 
 def branch_name_from_ref(ref: str) -> str | None:
@@ -124,17 +148,18 @@ def report_violations(
             continue
         seen.add(item)
 
-        matches = find_forbidden_names(branch_name)
-        if matches:
-            violations.append((source, branch_name, matches))
+        errors = find_branch_policy_errors(branch_name)
+        if errors:
+            violations.append((source, branch_name, errors))
 
     if not violations:
         return 0
 
-    print("错误: 已阻止 Git push。分支名称包含禁止的产品名：", file=error_stream)
-    for source, branch_name, matches in violations:
+    print("错误: 已阻止 Git push。分支名称不符合策略：", file=error_stream)
+    for source, branch_name, errors in violations:
+        source_label = f"{source}分支" if source else "分支"
         print(
-            f"  - {source}分支 {branch_name!r} 命中: {', '.join(matches)}",
+            f"  - {source_label} {branch_name!r}: {'；'.join(errors)}",
             file=error_stream,
         )
     print("请重命名分支后再推送。", file=error_stream)
