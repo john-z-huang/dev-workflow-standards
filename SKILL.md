@@ -25,9 +25,10 @@ description: >-
 
 - Git 分支名称必须只使用 ASCII 字符，不得包含中文或其他非 ASCII 字符，以避免终端、脚本、CI、URL 编码及跨平台协作中的兼容性问题。
 - 分支名称中的单词使用小写英文字母、数字和连字符（`-`）表示；需要表达层级时，仅可使用斜杠（`/`）分隔层级。
-- 分支名称应以清晰的类别前缀开始，例如 `agent/`、`feat/`、`fix/`、`docs/` 或 `refactor/`，并使用简短的英文描述说明变更内容。
+- 分支名称应以清晰的类别前缀开始；当前脚本允许 `agent/`、`feat/`、`fix/`、`docs/` 或 `refactor/`，并要求使用简短的英文描述说明变更内容。
 - 分支名称不得包含特定 Code Agent 产品名称。当前默认使用不区分大小写的正则表达式拦截 `codex`、`claude`、`antigravity`、`opencode`、`cursor`、`copilot`、`cline`、`roo-code`、`aider`、`continue`、`windsurf`、`devin`、`gemini`、`cody`、`junie`、`kiro`、`goose`、`augment` 和 `amazon-q` 等名称；名单由 `scripts/check-branch-name.py` 集中维护，可按团队需要扩展。
 - 向 GitHub 推送 patch 前，应启用标准 Git `pre-push` 检查。检查脚本命中禁止名称时返回非零退出码，Git 将阻止本次 push。
+- `main`、`master` 等受保护根分支可不带类别前缀；其他工作分支的字符、层级和类别前缀规则由 `scripts/check-branch-name.py` 在 push 前统一检查。
 
 **合规示例**：`agent/docs-branch-naming`、`fix/batch-result-validation`、`feat/async-batch-submit`。
 
@@ -88,6 +89,8 @@ main
 
 - 一个 Issue 涉及多个改动点时，须先规划每个改动点的职责与文件边界。每个改动点完成实现及对应测试后，先运行该改动点的针对性测试和必要的回归测试；仅在测试通过后，才提交该改动点。不得将复杂需求的全部实现堆入一次提交。
 - 提交信息保持中文、简明，并准确描述该提交所包含的模块变更。
+- 可使用标准 Git `commit-msg` hook 调用 `scripts/check-commit-message.py`，自动检查中文主题以及禁止的署名/生成声明；提交是否只包含一个独立模块仍需人工审查。
+- 可使用标准 Git `pre-commit` hook 调用 `scripts/check-staged-changes.py`，自动检查暂存区空白错误，并按项目配置运行测试命令。
 
 ### 提交内容署名约束
 
@@ -143,6 +146,7 @@ Code Agent 是辅助开发工具，不是真实的开发人员。Code Agent 不�
   - 必要时补充：复现步骤、技术约束、前置依赖
 - 实现改动必须通过 Pull Request 合并，并在 PR 描述中通过 `Closes #<Issue 编号>`（或等效关键字）关联对应的开放 Issue。
 - 未关联任何开放 Issue 时，禁止将本地改动推送到 GitHub。
+- 可使用只读脚本 `scripts/check-pr-policy.py` 检查 Issue 开放状态、PR 关联关键词以及显式指定的 base/head 拓扑；该脚本不替代 Issue/PR 的创建、审核和合并授权。
 
 ### PR 合并后流程
 
@@ -252,6 +256,7 @@ git branch -d <head-branch>
 - [ ] 已记录实际执行的验证命令及结果
 - [ ] 提交信息使用中文，简明描述模块变更
 - [ ] 提交信息及任何产物中不含 `Generated with`、`Co-Authored-By` 等 Code Agent 使用声明
+- [ ] 已通过 `commit-msg` 和 `pre-commit` 检查，或已人工完成等效验证
 
 ### 发起 PR 前
 

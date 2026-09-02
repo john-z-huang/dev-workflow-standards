@@ -10,3 +10,6 @@
 |------|----------|------|
 | `scripts/pr-merge-cleanup.py` | [`references/pr-merge-cleanup.md`](./pr-merge-cleanup.md) | PR 合并后确认状态、同步 main、删除本地特性分支 |
 | `scripts/check-branch-name.py` | [`references/check-branch-name.md`](./check-branch-name.md) | push 前使用正则表达式检查本地和远端分支名称，拦截特定产品名称 |
+| `scripts/check-commit-message.py` | [`references/check-commit-message.md`](./check-commit-message.md) | commit-msg 阶段检查中文主题和禁止署名声明 |
+| `scripts/check-staged-changes.py` | [`references/check-staged-changes.md`](./check-staged-changes.md) | pre-commit 阶段检查暂存区空白错误并可运行测试 |
+| `scripts/check-pr-policy.py` | [`references/check-pr-policy.md`](./check-pr-policy.md) | 只读检查 Issue 状态、PR 关联关系和 base/head 拓扑 |
