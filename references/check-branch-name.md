@@ -1,4 +1,4 @@
-# Push 前分支名称检查
+# Commit 前分支名称检查
 
 ## 功能描述
 
@@ -16,10 +16,10 @@
 
 ## 触发时机
 
-- 推荐作为标准 Git `pre-push` hook，在本地执行 `git push`、向 GitHub 推送 patch 前自动触发。
+- 作为标准 Git `pre-commit` hook，在本地执行 `git commit` 时自动触发。
 - 也可以手动传入分支名称，用于创建或重命名分支后的即时检查。
 
-脚本检查本地待推送的 `refs/heads/*` 和目标远端的 `refs/heads/*`。删除远端分支时没有新的 patch，脚本会跳过该 ref，避免阻止分支清理。
+分支名称策略在提交前检查，分支不合规时不会创建 commit，也不需要等到向远端仓库推送时才发现问题。
 
 ## 手动执行
 
@@ -30,13 +30,13 @@ python3 scripts/check-branch-name.py feat/add-validation
 # 一次检查多个分支
 python3 scripts/check-branch-name.py feat/add-validation fix/repair-timeout
 
-# 不传分支时检查当前分支
-python3 scripts/check-branch-name.py
+# 在当前 Git 仓库中检查当前分支
+python3 scripts/check-branch-name.py --pre-commit
 ```
 
 ## 集成方式
 
-仓库已提供可版本化的 `.githooks/pre-push` wrapper。首次在仓库中启用：
+仓库已提供可版本化的 `.githooks/pre-commit` wrapper。首次在仓库中启用：
 
 ```bash
 git config core.hooksPath .githooks
@@ -45,23 +45,24 @@ git config core.hooksPath .githooks
 之后正常执行：
 
 ```bash
-git push origin <分支名称>
+git add <文件>
+git commit -m 'feat: 添加输入校验'
 ```
 
-`.githooks/pre-push` 会把 Git 的标准 pre-push 输入交给检查脚本。命中禁止名称时，脚本输出违规分支和命中项并返回非零退出码，Git 不会继续推送。
-
-如果项目已有自定义 hook，应将检查命令合并到现有的 `pre-push` 流程，而不是覆盖已有检查：
+`.githooks/pre-commit` 会先调用：
 
 ```bash
-python3 scripts/check-branch-name.py --pre-push "$@"
+python3 scripts/check-branch-name.py --pre-commit
 ```
 
-本地 hook 可以被 `git push --no-verify` 绕过；如组织要求不可绕过，还应在 GitHub 仓库侧配置对应的分支保护或服务端检查。
+命中禁止名称或分支格式不合规时，脚本返回非零退出码，Git 不会创建 commit。已有自定义 `pre-commit` hook 时，应将该检查命令合并到现有流程，而不是覆盖已有检查。
+
+本地 hook 可以被 `git commit --no-verify` 绕过；如组织要求不可绕过，还应在代码托管平台侧配置对应的分支保护或服务端检查。
 
 ## 退出码
 
 | 退出码 | 含义 |
 |--------|------|
-| 0 | 所有待检查的分支名称均通过 |
-| 1 | 至少一个分支名称违反格式或命中禁止名称，push 应被阻止 |
-| 2 | 参数错误、无法确定当前分支或 pre-push 输入格式错误 |
+| 0 | 当前或指定分支名称通过检查 |
+| 1 | 至少一个分支名称违反格式或命中禁止名称，commit 应被阻止 |
+| 2 | 参数错误、无法确定当前分支或 Git 状态无效 |

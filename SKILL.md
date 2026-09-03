@@ -27,8 +27,8 @@ description: >-
 - 分支名称中的单词使用小写英文字母、数字和连字符（`-`）表示；需要表达层级时，仅可使用斜杠（`/`）分隔层级。
 - 分支名称应以清晰的类别前缀开始；当前脚本允许 `agent/`、`feat/`、`fix/`、`docs/` 或 `refactor/`，并要求使用简短的英文描述说明变更内容。
 - 分支名称不得包含特定 Code Agent 产品名称。当前默认使用不区分大小写的正则表达式拦截 `codex`、`claude`、`antigravity`、`opencode`、`cursor`、`copilot`、`cline`、`roo-code`、`aider`、`continue`、`windsurf`、`devin`、`gemini`、`cody`、`junie`、`kiro`、`goose`、`augment` 和 `amazon-q` 等名称；名单由 `scripts/check-branch-name.py` 集中维护，可按团队需要扩展。
-- 向 GitHub 推送 patch 前，应启用标准 Git `pre-push` 检查。检查脚本命中禁止名称时返回非零退出码，Git 将阻止本次 push。
-- `main`、`master` 等受保护根分支可不带类别前缀；其他工作分支的字符、层级和类别前缀规则由 `scripts/check-branch-name.py` 在 push 前统一检查。
+- 执行 `git commit` 前，应启用标准 Git `pre-commit` 检查。检查脚本命中禁止名称或分支格式不合规时返回非零退出码，Git 将阻止本次 commit。
+- `main`、`master` 等受保护根分支可不带类别前缀；其他工作分支的字符、层级和类别前缀规则由 `scripts/check-branch-name.py` 在 commit 前统一检查。
 
 **合规示例**：`agent/docs-branch-naming`、`fix/batch-result-validation`、`feat/async-batch-submit`。
 
@@ -261,7 +261,7 @@ git branch -d <head-branch>
 ### 发起 PR 前
 
 - [ ] 分支名称符合规范（ASCII、小写、类别前缀，且不包含禁止的产品名称）
-- [ ] 向 GitHub 推送 patch 前已启用标准 `pre-push` 分支名称检查
+- [ ] 执行 `git commit` 前已启用标准 `pre-commit` 分支名称、暂存区内容检查，以及 `commit-msg` 提交信息检查
 - [ ] 如使用堆叠 PR，已明确核对 base 分支、head 分支及基础 PR，未意外指向 `main`
 - [ ] PR 描述中包含 `Closes #<Issue 编号>`（或等效关键字）
 - [ ] 已确认关联的 Issue 处于开放状态

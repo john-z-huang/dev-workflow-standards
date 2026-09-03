@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""分支名称 push 前检查器测试。"""
+"""分支名称 commit 前检查器测试。"""
 
 from __future__ import annotations
 
 import subprocess
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -13,10 +14,13 @@ SCRIPT = Path(__file__).parents[1] / "scripts" / "check-branch-name.py"
 PYTHON = sys.executable
 
 
-def run_checker(*args: str, input_text: str = "") -> subprocess.CompletedProcess[str]:
+def run_checker(
+    *args: str,
+    cwd: Path | None = None,
+) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         [PYTHON, str(SCRIPT), *args],
-        input=input_text,
+        cwd=cwd,
         capture_output=True,
         text=True,
         check=False,
@@ -32,7 +36,7 @@ class CheckBranchNameTests(unittest.TestCase):
     def test_blocks_forbidden_name_case_insensitively(self) -> None:
         result = run_checker("Fix/CURSOR-timeout")
         self.assertEqual(result.returncode, 1)
-        self.assertIn("已阻止 Git push", result.stderr)
+        self.assertIn("已阻止 Git commit", result.stderr)
         self.assertIn("cursor", result.stderr)
 
     def test_blocks_each_requested_product_name(self) -> None:
@@ -41,41 +45,14 @@ class CheckBranchNameTests(unittest.TestCase):
                 result = run_checker(f"feat/{product_name}-integration")
                 self.assertEqual(result.returncode, 1)
 
-    def test_pre_push_checks_local_and_remote_branch_refs(self) -> None:
-        result = run_checker(
-            "--pre-push",
-            "origin",
-            "https://github.com/example/repo.git",
-            input_text=(
-                "refs/heads/feat/normal 1111111111111111111111111111111111111111 "
-                "refs/heads/antigravity-fix 0000000000000000000000000000000000000000\n"
-            ),
-        )
+    def test_pre_commit_checks_current_branch(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Path(directory)
+            subprocess.run(["git", "init", "-q"], cwd=repo, check=True)
+            subprocess.run(["git", "switch", "-c", "feature/add-validation"], cwd=repo, check=True)
+            result = run_checker("--pre-commit", cwd=repo)
         self.assertEqual(result.returncode, 1)
-        self.assertIn("antigravity-fix", result.stderr)
-
-    def test_pre_push_allows_remote_branch_deletion(self) -> None:
-        result = run_checker(
-            "--pre-push",
-            "origin",
-            "https://github.com/example/repo.git",
-            input_text=(
-                "(delete) 0000000000000000000000000000000000000000 "
-                "refs/heads/codex-old 1111111111111111111111111111111111111111\n"
-            ),
-        )
-        self.assertEqual(result.returncode, 0)
-        self.assertEqual(result.stderr, "")
-
-    def test_rejects_malformed_pre_push_input(self) -> None:
-        result = run_checker(
-            "--pre-push",
-            "origin",
-            "https://github.com/example/repo.git",
-            input_text="refs/heads/feat/normal 1111\n",
-        )
-        self.assertEqual(result.returncode, 2)
-        self.assertIn("4 个字段", result.stderr)
+        self.assertIn("不符合策略", result.stderr)
 
     def test_allows_protected_root_branch(self) -> None:
         result = run_checker("main")
