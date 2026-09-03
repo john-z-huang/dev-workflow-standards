@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
-"""在 Git push 前检查分支名称策略。
+"""在 Git commit 前检查分支名称策略。
 
-该脚本可直接作为 Git ``pre-push`` 检查器调用，也可以手动传入一个或多个
-分支名称进行检查。脚本检查根分支、类别前缀、ASCII/小写命名规则，以及
-禁止的产品名称。脚本只依赖 Python 标准库和 Git 本身，不依赖任何特定
-Code Agent 的运行时或配置格式。
+该脚本可直接作为 Git ``pre-commit`` 检查器调用，也可以手动传入一个或多个
+分支名称进行检查。脚本检查根分支、类别前缀、ASCII/小写命名规则，以及禁止
+的产品名称。脚本只依赖 Python 标准库和 Git 本身，不依赖任何特定 Code Agent
+的运行时或配置格式。
 
 用法:
     python3 check-branch-name.py feat/add-validation
-    python3 check-branch-name.py --pre-push origin <远端 URL>
+    python3 check-branch-name.py --pre-commit
 
 退出码:
-    0  所有待推送分支名称均通过检查
+    0  所有待提交分支名称均通过检查
     1  分支名称不符合策略
-    2  参数、Git 状态或 pre-push 输入无效
+    2  参数或 Git 状态无效
 """
 
 from __future__ import annotations
@@ -22,8 +22,6 @@ import argparse
 import re
 import subprocess
 import sys
-from collections.abc import Iterable
-from typing import TextIO
 
 
 # 该列表是有意集中维护的；新增产品名时只需补充此处，正则会自动更新。
@@ -86,83 +84,22 @@ def find_branch_policy_errors(branch_name: str) -> tuple[str, ...]:
     return tuple(errors)
 
 
-def branch_name_from_ref(ref: str) -> str | None:
-    """从 Git ref 中提取 heads 分支名；其他 ref 不参与检查。"""
-    prefix = "refs/heads/"
-    if not ref.startswith(prefix):
-        return None
-    return ref[len(prefix) :]
+def report_violations(branch_names: list[str]) -> int:
+    """报告违规分支并返回适用于 pre-commit 的退出码。"""
+    violations: list[tuple[str, tuple[str, ...]]] = []
 
-
-def is_zero_sha(sha: str) -> bool:
-    """判断 pre-push 输入中的 ref 是否表示删除远端分支。"""
-    return bool(sha) and not sha.strip("0")
-
-
-def read_pre_push_branches(lines: Iterable[str]) -> tuple[list[tuple[str, str]], str | None]:
-    """解析 Git pre-push 标准输入。
-
-    返回 ``(待检查分支, 错误信息)``。每个分支项为 ``(来源, 分支名)``，来源
-    用于在错误信息中区分本地 ref 和远端 ref。
-    """
-    branches: list[tuple[str, str]] = []
-
-    for line_number, line in enumerate(lines, start=1):
-        fields = line.split()
-        if not fields:
-            continue
-        if len(fields) != 4:
-            return [], f"pre-push 输入第 {line_number} 行应包含 4 个字段"
-
-        local_ref, local_sha, remote_ref, _remote_sha = fields
-
-        # 删除远端分支时 local_sha 为全零值，没有新的 patch 需要检查。
-        if is_zero_sha(local_sha):
-            continue
-
-        local_branch = branch_name_from_ref(local_ref)
-        if local_branch:
-            branches.append(("本地", local_branch))
-
-        # 检查目标远端分支，防止通过 refspec 将合规的本地分支推成违规的
-        # GitHub 分支名。
-        remote_branch = branch_name_from_ref(remote_ref)
-        if remote_branch and ("远端", remote_branch) not in branches:
-            branches.append(("远端", remote_branch))
-
-    return branches, None
-
-
-def report_violations(
-    branches: Iterable[tuple[str, str]],
-    *,
-    error_stream: TextIO,
-) -> int:
-    """报告违规分支并返回适用于 pre-push 的退出码。"""
-    violations: list[tuple[str, str, tuple[str, ...]]] = []
-    seen: set[tuple[str, str]] = set()
-
-    for source, branch_name in branches:
-        item = (source, branch_name)
-        if item in seen:
-            continue
-        seen.add(item)
-
+    for branch_name in dict.fromkeys(branch_names):
         errors = find_branch_policy_errors(branch_name)
         if errors:
-            violations.append((source, branch_name, errors))
+            violations.append((branch_name, errors))
 
     if not violations:
         return 0
 
-    print("错误: 已阻止 Git push。分支名称不符合策略：", file=error_stream)
-    for source, branch_name, errors in violations:
-        source_label = f"{source}分支" if source else "分支"
-        print(
-            f"  - {source_label} {branch_name!r}: {'；'.join(errors)}",
-            file=error_stream,
-        )
-    print("请重命名分支后再推送。", file=error_stream)
+    print("错误: 已阻止 Git commit。分支名称不符合策略：", file=sys.stderr)
+    for branch_name, errors in violations:
+        print(f"  - 分支 {branch_name!r}: {'；'.join(errors)}", file=sys.stderr)
+    print("请重命名分支后再提交。", file=sys.stderr)
     return 1
 
 
@@ -182,7 +119,7 @@ def current_branch() -> str | None:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="检查 Git 分支名称是否包含禁止的产品名",
+        description="检查 Git commit 使用的分支名称是否符合策略",
     )
     parser.add_argument(
         "branches",
@@ -191,23 +128,19 @@ def build_parser() -> argparse.ArgumentParser:
         help="直接检查的一个或多个分支名称；未提供时检查当前分支",
     )
     parser.add_argument(
-        "--pre-push",
+        "--pre-commit",
         action="store_true",
-        help="解析 Git pre-push 标准输入；Git 传入的 remote 参数会被忽略",
+        help="作为 Git pre-commit hook 检查当前分支",
     )
     return parser
 
 
-def main(argv: list[str] | None = None, stdin: TextIO | None = None) -> int:
+def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    input_stream = stdin or sys.stdin
 
-    if args.pre_push:
-        branches, error = read_pre_push_branches(input_stream)
-        if error:
-            print(f"错误: {error}", file=sys.stderr)
-            return 2
-        return report_violations(branches, error_stream=sys.stderr)
+    if args.pre_commit and args.branches:
+        print("错误: --pre-commit 不能与显式分支名称同时使用", file=sys.stderr)
+        return 2
 
     branch_names = args.branches
     if not branch_names:
@@ -217,10 +150,7 @@ def main(argv: list[str] | None = None, stdin: TextIO | None = None) -> int:
             return 2
         branch_names = [branch]
 
-    return report_violations(
-        (("", branch_name) for branch_name in branch_names),
-        error_stream=sys.stderr,
-    )
+    return report_violations(branch_names)
 
 
 if __name__ == "__main__":
