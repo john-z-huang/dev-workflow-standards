@@ -7,7 +7,7 @@
 本 Skill 涵盖以下核心规范：
 
 - **Git 分支命名规范** — ASCII 字符、小写英文、类别前缀（`feat/`、`fix/`、`docs/`、`refactor/`、`agent/` 等）
-- **Push 前分支名检查** — 通过标准 Git `pre-push` hook 和正则表达式拦截特定产品名称
+- **Commit 前分支名检查** — 通过标准 Git `pre-commit` hook 和正则表达式检查分支格式并拦截特定产品名称
 - **Commit message 检查** — 通过标准 Git `commit-msg` hook 检查中文主题和禁止署名声明
 - **暂存区检查** — 通过标准 Git `pre-commit` hook 检查空白错误，并可运行项目测试
 - **Issue/PR 策略审计** — 通过 `gh` REST API 只读检查状态、关联关系和 base/head
@@ -38,16 +38,15 @@ dev-workflow-standards/
 ├── README.md                   # 本文件
 ├── .githooks/
 │   ├── commit-msg              # 调用提交信息检查器
-│   ├── pre-commit              # 调用暂存区检查器
-│   └── pre-push                # 调用分支名检查器
+│   └── pre-commit              # 调用分支名和暂存区检查器
 ├── scripts/
-│   ├── check-branch-name.py     # Push 前分支名检查脚本
+│   ├── check-branch-name.py     # Commit 前分支名检查脚本
 │   ├── check-commit-message.py   # Commit message 检查脚本
 │   ├── check-pr-policy.py        # Issue/PR 策略审计脚本
 │   ├── check-staged-changes.py   # 暂存区检查脚本
 │   └── pr-merge-cleanup.py     # PR 合并后清理脚本
 ├── references/
-│   ├── check-branch-name.md     # Push 前分支名检查使用说明
+│   ├── check-branch-name.md     # Commit 前分支名检查使用说明
 │   ├── check-commit-message.md   # Commit message 检查使用说明
 │   ├── check-pr-policy.md        # Issue/PR 审计使用说明
 │   ├── check-staged-changes.md   # 暂存区检查使用说明
@@ -57,6 +56,7 @@ dev-workflow-standards/
 │   ├── test_check_commit_message.py # Commit message 测试
 │   ├── test_check_pr_policy.py  # Issue/PR 审计测试
 │   ├── test_check_staged_changes.py # 暂存区检查测试
+│   ├── test_git_hooks.py        # git commit hook 集成测试
 │   └── test_pr_merge_cleanup.py # 合并后清理测试
 └── .gitignore
 ```
@@ -67,7 +67,7 @@ dev-workflow-standards/
 
 - **`scripts/pr-merge-cleanup.py`** — PR 合并后自动清理：确认合并状态、同步 main、删除本地特性分支。用法：`python3 scripts/pr-merge-cleanup.py <PR编号>`（详见 [`references/pr-merge-cleanup.md`](./references/pr-merge-cleanup.md)）
 
-### Push 前分支名检查
+### Commit 前分支名检查
 
 - **`scripts/check-branch-name.py`** — 使用不区分大小写的正则表达式拦截特定产品名称。启用 hook：`git config core.hooksPath .githooks`；详见 [`references/check-branch-name.md`](./references/check-branch-name.md)。
 - **`scripts/check-commit-message.py`** — 在 `commit-msg` 阶段检查中文主题和禁止署名声明；详见 [`references/check-commit-message.md`](./references/check-commit-message.md)。

@@ -12,6 +12,7 @@
 ## 触发时机
 
 - 推荐作为标准 Git `commit-msg` hook，在提交信息最终写入前触发。
+- `commit-msg` 属于 `git commit` 流程；该检查不会延迟到向 remote 仓库执行 `git push` 时。
 - 也可以手动传入提交信息文件或 `--message` 文本检查。
 
 ## 手动执行
