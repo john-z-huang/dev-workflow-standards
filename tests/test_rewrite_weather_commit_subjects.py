@@ -40,6 +40,16 @@ class RewriteWeatherCommitSubjectsTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(result.stdout, message)
 
+    def test_leaves_github_merge_commit_unchanged(self) -> None:
+        message = (
+            "Merge pull request #12 from example/feature\n\n"
+            "GitHub 自动生成的合并提交。\n"
+        )
+        result = run_rewriter(message)
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout, message)
+
     def test_rejects_unknown_subject(self) -> None:
         result = run_rewriter("未配置标题\n")
 

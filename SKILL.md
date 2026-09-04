@@ -263,7 +263,8 @@ git branch -d <head-branch>
 所有自动化脚本的索引及其描述文档参见 [`references/automation-index.md`](./references/automation-index.md)。新增脚本时，在该文档的脚本索引表格中添加对应条目。
 
 历史提交标题重写属于高风险的一次性维护操作。需要用户明确授权后，才可以使用
-`scripts/rewrite_weather_commit_subjects.py`；该脚本只做精确标题映射，遇到未知标题
+`scripts/rewrite_weather_commit_subjects.py`；该脚本只做精确标题映射，会过滤以
+`Merge pull request` 开头的 GitHub 自动生成合并提交并原样输出，遇到其他未知标题
 立即失败，并且不能替代备份、分支范围核对和远端协作确认。使用说明见
 [`references/rewrite-weather-commit-subjects.md`](./references/rewrite-weather-commit-subjects.md)。
 
