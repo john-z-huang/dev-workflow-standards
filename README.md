@@ -8,7 +8,7 @@
 
 - **Git 分支命名规范** — ASCII 字符、小写英文、类别前缀（`feat/`、`fix/`、`docs/`、`refactor/`、`agent/` 等）
 - **Commit 前分支名检查** — 通过标准 Git `pre-commit` hook 和正则表达式检查分支格式并拦截特定产品名称
-- **Commit message 检查** — 通过标准 Git `commit-msg` hook 检查中文主题和禁止署名声明
+- **Commit message 检查** — 通过标准 Git `commit-msg` hook 检查 `<type>: 中文说明` 标题格式、中文说明和禁止署名声明
 - **暂存区检查** — 通过标准 Git `pre-commit` hook 检查空白错误，并可运行项目测试
 - **Issue/PR 策略审计** — 通过 `gh` REST API 只读检查状态、关联关系和 base/head
 - **提交规范** — 以可独立验证的功能模块为提交边界，提交信息使用中文，测试通过后方可提交
@@ -25,6 +25,11 @@
 ### 作为 Code Agent Skill 使用
 
 本 Skill 通常位于 `~/.agents/skills/dev-workflow-standards/`，由 Code Agent 自动加载。项目的 `AGENTS.md` 或 `CLAUDE.md` 可引用本 Skill 并补充项目特有约定。
+
+Skill 被加载并不等于目标项目已经启用 Git 校验。使用本 Skill 的项目必须将需要的
+`scripts/check-*.py` 和 `.githooks/` wrapper 复制到自己的仓库并提交，然后在该仓库
+执行 `git config core.hooksPath .githooks`。Hook 只能调用目标项目内的脚本，不应依赖
+开发者机器上的 Skill 路径。
 
 ### 快速检查清单
 
@@ -44,12 +49,14 @@ dev-workflow-standards/
 │   ├── check-commit-message.py   # Commit message 检查脚本
 │   ├── check-pr-policy.py        # Issue/PR 策略审计脚本
 │   ├── check-staged-changes.py   # 暂存区检查脚本
-│   └── pr-merge-cleanup.py     # PR 合并后清理脚本
+│   ├── rewrite_weather_commit_subjects.py # 历史提交标题重写脚本
+│   └── pr-merge-cleanup.py       # PR 合并后清理脚本
 ├── references/
 │   ├── check-branch-name.md     # Commit 前分支名检查使用说明
 │   ├── check-commit-message.md   # Commit message 检查使用说明
 │   ├── check-pr-policy.md        # Issue/PR 审计使用说明
 │   ├── check-staged-changes.md   # 暂存区检查使用说明
+│   ├── rewrite-weather-commit-subjects.md # 历史提交标题重写说明
 │   └── pr-merge-cleanup.md     # PR 合并后清理脚本使用说明
 ├── tests/
 │   ├── test_check_branch_name.py # 分支名检查测试
@@ -70,8 +77,9 @@ dev-workflow-standards/
 ### Commit 前分支名检查
 
 - **`scripts/check-branch-name.py`** — 使用不区分大小写的正则表达式拦截特定产品名称。启用 hook：`git config core.hooksPath .githooks`；详见 [`references/check-branch-name.md`](./references/check-branch-name.md)。
-- **`scripts/check-commit-message.py`** — 在 `commit-msg` 阶段检查中文主题和禁止署名声明；详见 [`references/check-commit-message.md`](./references/check-commit-message.md)。
+- **`scripts/check-commit-message.py`** — 在 `commit-msg` 阶段检查 `<type>: 中文说明` 标题格式、中文说明和禁止署名声明；详见 [`references/check-commit-message.md`](./references/check-commit-message.md)。
 - **`scripts/check-staged-changes.py`** — 在 `pre-commit` 阶段检查暂存区空白错误，可选运行测试；详见 [`references/check-staged-changes.md`](./references/check-staged-changes.md)。
+- **`scripts/rewrite_weather_commit_subjects.py`** — 按精确映射重写历史提交标题；该操作会改变 commit SHA，详见 [`references/rewrite-weather-commit-subjects.md`](./references/rewrite-weather-commit-subjects.md)。
 - **`scripts/check-pr-policy.py`** — 只读检查 Issue/PR 状态、关联关系和 base/head；详见 [`references/check-pr-policy.md`](./references/check-pr-policy.md)。
 
 ## 规范要点速览
@@ -93,6 +101,7 @@ fix/CURSOR-timeout          ❌ 含禁止的产品名称（大小写不敏感）
 
 ```
 feat: 添加批量请求校验                    ✅ 中文、单一模块
+增加批量请求校验                         ❌ 缺少类型前缀
 feat: 批量处理、文档优化与代码清理         ❌ 混入多个不相关变更
 ```
 

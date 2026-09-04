@@ -21,6 +21,23 @@ description: >-
 
 ## Git 规范
 
+### 版本化校验脚本与 Hook
+
+本 Skill 中的 Git 校验脚本和 `.githooks` 文件只是可复用资源，不会因为 Skill 被加载
+就自动注入或启用到目标项目。要让校验在目标项目的 `git commit` 流程中生效，必须将
+相关脚本复制到目标项目的 `scripts/` 目录，将 `commit-msg` 和 `pre-commit` wrapper
+复制到目标项目的 `.githooks/` 目录，并在目标项目中执行：
+
+```bash
+git config core.hooksPath .githooks
+```
+
+推荐将复制后的脚本和 Hook 纳入目标项目版本控制；Hook 中应通过目标项目自己的
+`scripts/` 路径调用脚本，不要依赖开发者机器上的 Skill 绝对路径。新克隆项目或新
+开发者首次使用时，需要重新执行上述 `git config`（该配置保存在本地 Git 配置中，
+不会随提交自动共享）。`git commit --no-verify` 可以绕过本地 Hook；若必须强制执行，
+还需要在代码托管平台配置服务端检查。
+
 ### 分支命名
 
 - Git 分支名称必须只使用 ASCII 字符，不得包含中文或其他非 ASCII 字符，以避免终端、脚本、CI、URL 编码及跨平台协作中的兼容性问题。
@@ -77,6 +94,21 @@ main
 
 基础 PR 合并后，再根据仓库协作约定将堆叠 PR 的 base 更新到 `main` 或其他新的基础分支；更新前先确认差异范围，并避免未经授权的强制推送。
 
+### Git 元数据写权限（Codex 沙箱）
+
+- 在 Codex 的 `workspace-write` 沙箱中，工作区源码通常可写，但 `.git` 目录可能保持只读；`git add`、`git commit`、`git reset`、`git merge`、`git rebase`、`git tag` 等会改变 Git 状态或历史的命令因此可能需要提升权限。`git status`、`git diff`、`git log` 等只读检查应先在普通沙箱中执行。
+- 当用户明确要求暂存、提交或其他 Git 写操作时，先用普通权限完成 `git status`、当前分支和差异范围检查，确定准确的文件边界；确认需要写入 `.git` 后，直接为后续 Git 写命令申请受控的提升权限，不要先无权限尝试 `git add` 或 `git commit`，避免产生可预见的 `index.lock` 权限失败。
+- 提升权限获准后，只暂存已确认的文件，执行 `git diff --cached --check` 和必要测试，再执行提交；提交后用 `git show`、`git status` 核对结果。权限申请被拒绝时停止 Git 写操作并说明原因，不用绕过沙箱或改写仓库位置。
+
+### uv 管理的 Python 项目中的静态检查
+
+- 对使用 uv 管理的 Python 项目（例如存在 `pyproject.toml`、`uv.lock` 或项目虚拟环境的项目），不要默认使用 `uv run ruff ...` 或 `uv run ty ...`。
+- `uv run` 可能访问项目目录之外的用户级 uv 缓存；在受限沙箱中，即使使用 `--no-sync`，也可能因缓存目录不可读而出现 `Operation not permitted`。这属于环境权限问题，不代表 Ruff 或 Ty 检查本身失败。
+- 优先调用项目 Python 虚拟环境中的可执行文件：
+  - POSIX：`<project>/.venv/bin/ruff ...`、`<project>/.venv/bin/ty ...`
+  - Windows：`<project>/.venv/Scripts/ruff.exe ...`、`<project>/.venv/Scripts/ty.exe ...`
+- 运行前确认虚拟环境中的工具存在并使用其版本；如果缺少 Ruff 或 Ty，应使用项目已有的环境安装/恢复流程，或明确报告依赖缺失和权限阻塞，不要静默改用全局工具或 `uv run`。
+
 ### 提交规范
 
 - 以可独立验证的功能模块为提交边界；每完成一个功能模块，都必须同时补充或更新相应测试代码。
@@ -89,7 +121,8 @@ main
 
 - 一个 Issue 涉及多个改动点时，须先规划每个改动点的职责与文件边界。每个改动点完成实现及对应测试后，先运行该改动点的针对性测试和必要的回归测试；仅在测试通过后，才提交该改动点。不得将复杂需求的全部实现堆入一次提交。
 - 提交信息保持中文、简明，并准确描述该提交所包含的模块变更。
-- 可使用标准 Git `commit-msg` hook 调用 `scripts/check-commit-message.py`，自动检查中文主题以及禁止的署名/生成声明；提交是否只包含一个独立模块仍需人工审查。
+- 提交标题统一使用 `<type>: 中文说明` 格式；允许的 `type` 为 `feat`、`fix`、`docs`、`refactor`、`test`、`chore`、`perf`、`build` 和 `ci`。
+- 可使用标准 Git `commit-msg` hook 调用目标项目 `scripts/check-commit-message.py`，自动检查提交标题前缀、中文说明以及禁止的署名/生成声明；提交是否只包含一个独立模块仍需人工审查。
 - 可使用标准 Git `pre-commit` hook 调用 `scripts/check-staged-changes.py`，自动检查暂存区空白错误，并按项目配置运行测试命令。
 
 ### 提交内容署名约束
@@ -229,6 +262,11 @@ git branch -d <head-branch>
 
 所有自动化脚本的索引及其描述文档参见 [`references/automation-index.md`](./references/automation-index.md)。新增脚本时，在该文档的脚本索引表格中添加对应条目。
 
+历史提交标题重写属于高风险的一次性维护操作。需要用户明确授权后，才可以使用
+`scripts/rewrite_weather_commit_subjects.py`；该脚本只做精确标题映射，遇到未知标题
+立即失败，并且不能替代备份、分支范围核对和远端协作确认。使用说明见
+[`references/rewrite-weather-commit-subjects.md`](./references/rewrite-weather-commit-subjects.md)。
+
 ---
 
 ## 附录：快速检查清单
@@ -254,13 +292,16 @@ git branch -d <head-branch>
 - [ ] 该提交仅包含一个可独立验证的功能模块（不混入无关变更）
 - [ ] 对应的测试代码已补充或更新，且测试通过
 - [ ] 已记录实际执行的验证命令及结果
+- [ ] 对 uv 管理的 Python 项目，已使用项目虚拟环境中的 Ruff 和 Ty；未默认使用可能触发缓存权限问题的 `uv run ruff` 或 `uv run ty`
 - [ ] 提交信息使用中文，简明描述模块变更
+- [ ] 提交标题使用允许的 `<type>: 中文说明` 格式
 - [ ] 提交信息及任何产物中不含 `Generated with`、`Co-Authored-By` 等 Code Agent 使用声明
 - [ ] 已通过 `commit-msg` 和 `pre-commit` 检查，或已人工完成等效验证
 
 ### 发起 PR 前
 
 - [ ] 分支名称符合规范（ASCII、小写、类别前缀，且不包含禁止的产品名称）
+- [ ] 已将 Skill 的校验脚本与 `.githooks` wrapper 复制到目标项目，并执行 `git config core.hooksPath .githooks`
 - [ ] 执行 `git commit` 前已启用标准 `pre-commit` 分支名称、暂存区内容检查，以及 `commit-msg` 提交信息检查
 - [ ] 如使用堆叠 PR，已明确核对 base 分支、head 分支及基础 PR，未意外指向 `main`
 - [ ] PR 描述中包含 `Closes #<Issue 编号>`（或等效关键字）
