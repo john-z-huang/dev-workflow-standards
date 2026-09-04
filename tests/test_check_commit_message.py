@@ -33,6 +33,11 @@ class CheckCommitMessageTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("必须包含中文", result.stderr)
 
+    def test_rejects_commit_message_without_type_prefix(self) -> None:
+        result = run_checker("--message", "增加输入校验")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("类型前缀", result.stderr)
+
     def test_rejects_attribution_statement(self) -> None:
         result = run_checker(
             "--message",

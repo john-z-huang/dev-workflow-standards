@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""检查 Git 提交信息的语言和署名约束。
+"""检查 Git 提交信息的格式、语言和署名约束。
 
 该脚本可作为 ``commit-msg`` hook 使用，也可以通过 ``--message`` 直接检查
-文本。它只阻止明确违反规范的署名/生成声明；是否真正属于一个独立功能模块
-仍由人工审查。
+文本。提交主题必须使用 ``<type>: 中文说明`` 格式，并且禁止明确违反规范的
+署名/生成声明；是否真正属于一个独立功能模块仍由人工审查。
 
 用法:
     python3 check-commit-message.py .git/COMMIT_EDITMSG
@@ -25,6 +25,9 @@ from typing import TextIO
 
 
 CHINESE_PATTERN = re.compile(r"[\u3400-\u9fff]")
+SUBJECT_PATTERN = re.compile(
+    r"^(?:feat|fix|docs|refactor|test|chore|perf|build|ci):\s+\S.*$"
+)
 ATTRIBUTION_PATTERN = re.compile(
     r"(?:generated\s+(?:with|by)|created\s+with|assisted\s+by|"
     r"authored\s+by|co-?authored-?by)",
@@ -45,8 +48,14 @@ def validate_message(message: str) -> tuple[str, ...]:
 
     if not subject:
         errors.append("提交主题不能为空")
-    elif not CHINESE_PATTERN.search(subject):
-        errors.append("提交主题必须包含中文说明")
+    else:
+        if not SUBJECT_PATTERN.fullmatch(subject):
+            errors.append(
+                "提交主题必须使用允许的类型前缀和格式："
+                "<type>: 中文说明（type 可为 feat/fix/docs/refactor/test/chore/perf/build/ci）"
+            )
+        if not CHINESE_PATTERN.search(subject):
+            errors.append("提交主题必须包含中文说明")
 
     attribution_match = ATTRIBUTION_PATTERN.search("\n".join(lines))
     if attribution_match:
@@ -65,7 +74,7 @@ def report_errors(errors: tuple[str, ...], *, error_stream: TextIO) -> int:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="检查 Git 提交信息的语言和署名约束")
+    parser = argparse.ArgumentParser(description="检查 Git 提交信息的格式、语言和署名约束")
     parser.add_argument(
         "message_file",
         nargs="?",
