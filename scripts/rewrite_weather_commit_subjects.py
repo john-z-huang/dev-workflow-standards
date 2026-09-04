@@ -2,7 +2,8 @@
 """为历史天气数据项目提交标题补充统一的类型前缀。
 
 该脚本作为 ``git filter-branch --msg-filter`` 的消息过滤器使用。它只从标准输入
-读取一条完整的 Git 提交信息，将第一行标题按精确映射替换后输出到标准输出；不
+读取一条完整的 Git 提交信息，将第一行标题按精确映射替换后输出到标准输出；GitHub
+自动生成的 ``Merge pull request`` 提交会被过滤并原样输出，不参与标题重命名；不
 直接修改 Git 引用，也不改动提交正文或文件树。
 
 用法示例:
@@ -53,6 +54,7 @@ SUBJECTS = {
 PREFIXED_SUBJECT = re.compile(
     r"^(?:feat|fix|docs|refactor|test|chore|perf|build|ci):\s+\S.*$"
 )
+GITHUB_MERGE_SUBJECT_PREFIX = "Merge pull request"
 
 
 def rewrite(message: str) -> str:
@@ -64,6 +66,9 @@ def rewrite(message: str) -> str:
             continue
 
         normalized_subject = subject.strip()
+        if normalized_subject.startswith(GITHUB_MERGE_SUBJECT_PREFIX):
+            return message
+
         replacement = SUBJECTS.get(normalized_subject)
         if replacement is None:
             if PREFIXED_SUBJECT.fullmatch(normalized_subject):

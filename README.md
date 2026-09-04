@@ -79,7 +79,7 @@ dev-workflow-standards/
 - **`scripts/check-branch-name.py`** — 使用不区分大小写的正则表达式拦截特定产品名称。启用 hook：`git config core.hooksPath .githooks`；详见 [`references/check-branch-name.md`](./references/check-branch-name.md)。
 - **`scripts/check-commit-message.py`** — 在 `commit-msg` 阶段检查 `<type>: 中文说明` 标题格式、中文说明和禁止署名声明；详见 [`references/check-commit-message.md`](./references/check-commit-message.md)。
 - **`scripts/check-staged-changes.py`** — 在 `pre-commit` 阶段检查暂存区空白错误，可选运行测试；详见 [`references/check-staged-changes.md`](./references/check-staged-changes.md)。
-- **`scripts/rewrite_weather_commit_subjects.py`** — 按精确映射重写历史提交标题；该操作会改变 commit SHA，详见 [`references/rewrite-weather-commit-subjects.md`](./references/rewrite-weather-commit-subjects.md)。
+- **`scripts/rewrite_weather_commit_subjects.py`** — 按精确映射重写历史提交标题，过滤 GitHub 自动生成的 `Merge pull request` 提交；该操作会改变 commit SHA，详见 [`references/rewrite-weather-commit-subjects.md`](./references/rewrite-weather-commit-subjects.md)。
 - **`scripts/check-pr-policy.py`** — 只读检查 Issue/PR 状态、关联关系和 base/head；详见 [`references/check-pr-policy.md`](./references/check-pr-policy.md)。
 
 ## 规范要点速览
