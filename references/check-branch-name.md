@@ -36,7 +36,8 @@ python3 scripts/check-branch-name.py --pre-commit
 
 ## 集成方式
 
-仓库已提供可版本化的 `.githooks/pre-commit` wrapper。首次在仓库中启用：
+Skill 自带的 `.githooks/pre-commit` 只是可复制的 wrapper，不会自动安装到目标项目。
+目标项目必须先将 wrapper 和相关脚本复制到自己的 `.githooks/`、`scripts/` 目录。首次在目标仓库中启用：
 
 ```bash
 git config core.hooksPath .githooks

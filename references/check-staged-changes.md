@@ -22,7 +22,8 @@ python3 scripts/check-staged-changes.py \
 
 ## 集成方式
 
-仓库的 `.githooks/pre-commit` 已调用基础检查。启用版本化 hooks：
+Skill 自带的 `.githooks/pre-commit` 只是可复制的 wrapper，不会自动安装到目标项目。
+目标项目必须将 wrapper 和相关脚本复制到自己的 `.githooks/`、`scripts/` 目录，再启用版本化 hooks：
 
 ```bash
 git config core.hooksPath .githooks
