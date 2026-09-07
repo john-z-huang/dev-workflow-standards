@@ -5,7 +5,7 @@
 - 使用 GitHub Connector 或 GitHub App 集成层时，必须确认该集成已获得目标仓库及当前操作所需的授权，并遵循其工具接口的参数、确认和返回值约定；不得要求用户在对话中粘贴访问令牌，也不得自行猜测或伪造授权信息。
 - 无论使用 `gh` CLI 还是已授权集成层，都必须显式核对仓库、Issue、PR、base/head 分支及操作结果；集成层应提供与下述 `gh` 示例等价的查询、创建、更新、评论、合并和核验能力。
 
-  **正确做法**：使用 `gh issue create --title "..." --body "..." --label "enhancement"`，或调用已授权 GitHub Connector / GitHub App 的等效 Issue 创建操作并通过 `labels` 参数附加分类标签；使用 `gh pr create --title "..." --body "..."`，或调用其等效 PR 创建操作。
+  **正确做法**：使用 `gh issue create --title "..." --body "..." --label "enhancement" --assignee "@me"`，或调用已授权 GitHub Connector / GitHub App 的等效 Issue 创建操作并通过 `labels`、`assignees` 参数附加分类标签和本人责任人；使用 `gh pr create --title "..." --body "..." --assignee "@me"`，或调用其等效 PR 创建操作并确保创建后立即完成本人指派。
 
   **错误做法**：在浏览器中打开 `github.com` 手动创建 Issue/PR、使用 Playwright/Selenium 等浏览器自动化工具操作 GitHub 页面。
 
@@ -41,10 +41,15 @@
   1. **先读取已有标签**：使用 `gh label list --limit 100 --json name,description,color`，或调用已授权 GitHub 集成层提供的等效标签查询操作。默认标签也可能被仓库维护者修改或删除，因此不得只凭名称猜测其存在。
   2. **判断 Issue 类别**：根据 Issue 的主要目的选择至少一个能够表达工作类型的标签。优先复用仓库已经定义且语义明确的类型标签；若仓库沿用 GitHub 默认标签，可使用 `bug` 表示缺陷、`documentation` 表示纯文档改动、`enhancement` 表示新增功能或改进，`question` 仅用于确实以信息确认或答疑为主的 Issue。
   3. **区分主类别与辅助标签**：`good first issue`、`help wanted`、优先级、状态、组件或领域等标签可以追加，但不能替代工作类型分类标签。若仓库已有更细的 `type:*`、组件或领域标签体系，应遵循仓库约定，可同时附加多个标签以提高筛选能力。
-  4. **创建时一次性附加**：`gh` CLI 使用 `gh issue create ... --label "<类别标签>"`；多个标签可重复传入 `--label`。GitHub Connector / GitHub App 应在 Issue 创建调用中通过等效 `labels` 字段一次性附加，不应先创建无标签 Issue 再依赖人工补录。
-  5. **创建后核验**：使用 `gh issue view <编号> --json number,title,state,labels`，或集成层的等效 Issue 读取操作，确认目标仓库、Issue 编号和标签均正确。若返回结果未包含预期分类标签，应先修正再视为流程完成。
+  4. **创建时一次性附加**：`gh` CLI 使用 `gh issue create ... --label "<类别标签>" --assignee "@me"`；多个标签可重复传入 `--label`。GitHub Connector / GitHub App 应在 Issue 创建调用中通过等效 `labels` 与 `assignees` 字段一次性附加分类标签和本人责任人，不应先创建无标签、无责任人的 Issue 再依赖人工补录。
+  5. **创建后核验**：使用 `gh issue view <编号> --json number,title,state,labels,assignees`，或集成层的等效 Issue 读取操作，确认目标仓库、Issue 编号、标签和本人 assignee 均正确。若返回结果未包含预期分类标签或本人责任人，应先修正再视为流程完成。
   6. **无可用分类标签时停止猜测**：若仓库没有语义合适的现有类别标签，或当前工具无法可靠读取/使用标签，不得随意发明一次性标签，也不得把未分类 Issue 当作流程完成。应明确报告缺失的标签或工具能力；只有在当前用户任务已经授权修改仓库标签体系时，才创建稳定、可复用的新标签后继续。
 - 若组织或仓库同时使用 GitHub Issue types，可将其作为额外分类元数据；本 Skill 仍要求保留至少一个类别 label，以便在 Issue/PR 列表、搜索和筛选中快速识别工作类型。
+- Issue 和 PR 默认指派给当前已认证的本人 GitHub 账号；只有当前用户明确指定其他责任人时才覆盖此默认值：
+  1. **先解析当前账号**：`gh` CLI 使用 `gh api user --jq .login` 获取当前登录用户名；GitHub Connector / GitHub App 使用其当前用户/登录信息查询能力。不得假设仓库 owner 一定等于当前认证账号，也不得在 Skill 中硬编码用户名。
+  2. **Issue 自指派**：创建 Issue 时优先直接使用 `--assignee "@me"` 或创建接口的 `assignees` 字段，与分类标签一起写入。
+  3. **PR 自指派**：`gh pr create` 使用 `--assignee "@me"`。若 GitHub 集成层的 PR 创建接口不提供 assignee 字段，应在 PR 创建成功后立即通过该 PR 对应的 Issue/assignee 接口把当前登录用户名加入 assignees；这属于创建流程的一部分，不视为人工补录。
+  4. **创建后核验**：Issue 使用 `gh issue view <编号> --json assignees`，PR 使用 `gh pr view <编号> --json assignees`，或集成层等效读取操作，确认本人账号确实在 assignees 中。若指派失败、当前身份不可被指派或工具缺少必要能力，应明确报告阻塞，不得把 Issue/PR 创建流程视为完成。
 - 实现改动必须通过 Pull Request 合并，并在 PR 描述中通过 `Closes #<Issue 编号>`（或等效关键字）关联对应的开放 Issue。
 - 未关联任何开放 Issue 时，禁止将本地改动推送到 GitHub。
 - 可使用只读脚本 `scripts/check-pr-policy.py` 检查 Issue 开放状态、PR 关联关键词以及显式指定的 base/head 拓扑；该脚本不替代 Issue/PR 的创建、审核和合并授权。
