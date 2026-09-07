@@ -16,6 +16,7 @@ description: >-
 - 修改前检查现有差异，保留用户改动。提交只暂存本任务相关文件或 hunk；运行差异检查与相关验证，以可独立审查、回滚的逻辑单元提交。新增行为和缺陷修复补充有意义的测试；纯文档或机械修改不强制增加测试代码。
 - Skill 不自动授权提交、推送、外部消息或合并。依据当前用户任务已有授权执行。
 - GitHub 推送须关联开放 Issue，变更通过 PR 合并并关联 Issue；创建新 Issue 时优先检查仓库已有 labels，选择至少一个类别标签并在创建调用中一并附加；若已授权 GitHub 集成层明确不支持 label 枚举但支持创建时写入 labels 和创建后回读，则按 `references/github.md` 的受限降级流程使用保守类别候选并验证，不因缺少枚举接口本身阻塞；创建 Issue 和 PR 时默认指派给当前已认证的本人 GitHub 账号，并在创建后核验标签与 assignee 已写入；精确规则见 references/github.md。
+- Pull Request 合并到 `main` 时必须使用 Squash Merge，确保该 PR 的全部改动只以一个 commit 进入 `main`，不得把 PR 开发过程中的多个 commits 原样带入主分支历史；精确规则见 references/squash-merge.md。
 - 令牌不输出、不记录、不放入命令文本；使用既有授权连接。
 - 自动化使用可移植 Shell/Python 和标准 Git Hook，不使用 Code Agent 专有 Hooks。已有项目约束继续遵守。
 
@@ -27,6 +28,7 @@ description: >-
 | 创建依赖未合并分支的 PR | [堆叠 PR](references/stacked-pr.md) |
 | Git 沙箱、uv 检查工具问题 | [环境](references/environment.md)，按实际权限处理，不机械预先提权 |
 | GitHub Issue/PR、标签、认证和网络故障 | [GitHub](references/github.md)；优先 gh，已授权集成可替代，禁止浏览器自动化 |
+| 合并 PR 到 main | [Squash Merge](references/squash-merge.md)，最终只允许一个代表该 PR 的 commit 进入 main |
 | 已合并 PR 的分支清理 | [合并清理](references/merge-cleanup.md) |
 | 新增可移植自动化脚本 | [自动化索引](references/automation-index.md)，补充用途、调用与退出码说明 |
 
