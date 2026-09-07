@@ -15,7 +15,7 @@ description: >-
 - 工作分支使用 ASCII 小写字母、数字、连字符和斜杠，前缀为 agent/feat/fix/docs/refactor，不含 Code Agent 产品名；精确规则见 scripts/check-branch-name.py。
 - 修改前检查现有差异，保留用户改动。提交只暂存本任务相关文件或 hunk；运行差异检查与相关验证，以可独立审查、回滚的逻辑单元提交。新增行为和缺陷修复补充有意义的测试；纯文档或机械修改不强制增加测试代码。
 - Skill 不自动授权提交、推送、外部消息或合并。依据当前用户任务已有授权执行。
-- GitHub 推送须关联开放 Issue，变更通过 PR 合并并关联 Issue；创建新 Issue 时必须先检查仓库已有 labels，根据内容选择至少一个类别标签并在创建调用中一并附加；创建 Issue 和 PR 时默认指派给当前已认证的本人 GitHub 账号，并在创建后核验标签与 assignee 已写入；精确规则见 references/github.md。
+- GitHub 推送须关联开放 Issue，变更通过 PR 合并并关联 Issue；创建新 Issue 时优先检查仓库已有 labels，选择至少一个类别标签并在创建调用中一并附加；若已授权 GitHub 集成层明确不支持 label 枚举但支持创建时写入 labels 和创建后回读，则按 `references/github.md` 的受限降级流程使用保守类别候选并验证，不因缺少枚举接口本身阻塞；创建 Issue 和 PR 时默认指派给当前已认证的本人 GitHub 账号，并在创建后核验标签与 assignee 已写入；精确规则见 references/github.md。
 - 令牌不输出、不记录、不放入命令文本；使用既有授权连接。
 - 自动化使用可移植 Shell/Python 和标准 Git Hook，不使用 Code Agent 专有 Hooks。已有项目约束继续遵守。
 
