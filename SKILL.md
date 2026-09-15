@@ -16,6 +16,7 @@ description: >-
 - 修改前检查现有差异，保留用户改动。提交只暂存本任务相关文件或 hunk；运行差异检查与相关验证，以可独立审查、回滚的逻辑单元提交。新增行为和缺陷修复补充有意义的测试；纯文档或机械修改不强制增加测试代码。
 - Skill 不自动授权提交、推送、外部消息或合并。依据当前用户任务已有授权执行。
 - 项目同时是 Git 仓库且配置了 remote 时，每个完整需求必须在独立 Git worktree 中完成。创建每个需求 worktree 前，原始工作区必须处于仓库主分支并成功执行一次 `git pull --ff-only`；普通需求从刚同步的本地主分支创建。只有当前任务明确要求或批准依赖未合并分支时，才可在仍成功同步主分支后按 [堆叠 PR 规则](references/stacked-pr.md) 从该依赖分支创建。此门禁规定必要顺序，但不自动授权网络访问或 Git 状态变更；若任务授权或运行权限不足，保护现有改动并停止创建、请求或等待所需权限。不得用过期分支或远端引用绕过同步门禁。原始工作区只用于同步远端主分支及创建、管理 worktree，不承载需求实现、暂存或提交。单 worktree 与并行 worktree 的交付顺序见 [Git worktree 开发流程](references/worktree.md)。无 Git 仓库或未配置 remote 时，不强制使用 worktree。
+- 目标远端为空、没有默认分支或没有可用 PR base 时，先按 [空远端初始化流程](references/worktree.md#空远端仓库初始化) 创建最小 `README.md` bootstrap 提交并推送到 `main`；README 不得携带本次需求内容或无关文件。远端 `main` 建立后，再按普通同步、Issue、worktree、分支、提交、推送和 PR 流程交付实际需求。
 - GitHub 推送须关联开放 Issue，变更通过 PR 合并并关联 Issue；创建新 Issue 时优先检查仓库已有 labels，选择至少一个类别标签并在创建调用中一并附加；若已授权 GitHub 集成层明确不支持 label 枚举但支持创建时写入 labels 和创建后回读，则按 `references/github.md` 的受限降级流程使用保守类别候选并验证，不因缺少枚举接口本身阻塞；创建 Issue 和 PR 时默认指派给当前已认证的本人 GitHub 账号，并在创建后核验标签与 assignee 已写入；精确规则见 references/github.md。
 - Pull Request 合并到 `main` 时必须使用 Squash Merge，确保该 PR 的全部改动只以一个 commit 进入 `main`，不得把 PR 开发过程中的多个 commits 原样带入主分支历史；精确规则见 references/squash-merge.md。
 - 令牌不输出、不记录、不放入命令文本；使用既有授权连接。
@@ -27,6 +28,7 @@ description: >-
 |---|---|
 | 接入或修复 Git Hook | [Hook 接入](references/hooks.md)，仅在接入任务或项目明确要求时安装；否则运行等效检查 |
 | 有 remote 的 Git 仓库中的需求开发、worktree 创建或并行交付 | 创建每个 worktree 前先在原始工作区成功同步主分支；详见 [Git worktree 开发流程](references/worktree.md) |
+| 空远端仓库初始化 | 先用最小 `README.md` 建立 `main` 和 PR base，再进入普通需求流程；详见 [Git worktree 开发流程](references/worktree.md#空远端仓库初始化) |
 | 创建依赖未合并分支的 PR | [堆叠 PR](references/stacked-pr.md) |
 | Git 沙箱、uv 检查工具问题 | [环境](references/environment.md)，按实际权限处理，不机械预先提权 |
 | GitHub Issue/PR、标签、认证和网络故障 | [GitHub](references/github.md)；优先 gh，已授权集成可替代，禁止浏览器自动化 |

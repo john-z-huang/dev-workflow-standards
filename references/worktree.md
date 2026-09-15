@@ -10,6 +10,17 @@
 
 worktree 负责隔离工作目录和分支，不授予 Git 写操作或 GitHub 操作权限。提交、推送、创建 Issue/PR、合并等仍须遵循当前用户任务授权和本 Skill 的现有规则；尤其是 GitHub 变更须关联开放 Issue、通过 PR 合并，详见 [GitHub 流程](github.md)。
 
+## 空远端仓库初始化
+
+当目标远端仓库已确认为空、没有默认分支或没有可用的 PR base 分支时，普通 worktree 流程缺少可同步和分支起点。此时允许执行一次受限的 bootstrap：
+
+1. 先确认远端仓库、权限和空状态；不要用过期的 remote-tracking 引用或其他仓库内容代替空远端的事实。
+2. 创建只包含项目名称和初始化状态的最小 `README.md`，作为 bootstrap 提交推送到远端 `main`。该提交不得包含本次需求的代码、测试、配置、规划文档或其他无关文件。
+3. 远端 `main` 建立后，在原始工作区执行普通同步门禁：切换到 `main` 并成功运行 `git pull --ff-only origin main`；然后从最新 `main` 创建本次需求的 `agent/...` 分支和独立 worktree。
+4. 创建或核验开放 Issue、类别标签和 assignee；在需求 worktree 中完成实际内容、验证、中文提交、分支推送和关联 PR。bootstrap README 不属于本次需求的验收成果。
+
+bootstrap 只解决“没有 base 分支”这一 Git 协作前置条件，不是绕过 Issue、worktree、分支、验证、PR 或合并规则的通道。若空远端初始化本身需要偏离普通 worktree 的物理顺序，偏离范围必须限于 README bootstrap，并在交付记录中说明。
+
 ## 开始一个需求
 
 1. 每创建一个完整需求对应的 worktree 前，都必须在原始工作区完成以下同步门禁。确认仓库 remote 和实际主分支；确认原始工作区没有会妨碍安全切换或拉取的未提交改动，并处于该主分支。若当前不在主分支，只能在不覆盖或移动用户改动的前提下安全切换；随后执行一次快进拉取：
