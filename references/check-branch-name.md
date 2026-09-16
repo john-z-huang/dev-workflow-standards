@@ -34,31 +34,9 @@ python3 scripts/check-branch-name.py feat/add-validation fix/repair-timeout
 python3 scripts/check-branch-name.py --pre-commit
 ```
 
-## 集成方式
+## 边界
 
-Skill 自带的 `.githooks/pre-commit` 只是可复制的 wrapper，不会自动安装到目标项目。
-目标项目必须先将 wrapper 和相关脚本复制到自己的 `.githooks/`、`scripts/` 目录。首次在目标仓库中启用：
-
-```bash
-git config core.hooksPath .githooks
-```
-
-之后正常执行：
-
-```bash
-git add <文件>
-git commit -m 'feat: 添加输入校验'
-```
-
-`.githooks/pre-commit` 会先调用：
-
-```bash
-python3 scripts/check-branch-name.py --pre-commit
-```
-
-命中禁止名称或分支格式不合规时，脚本返回非零退出码，Git 不会创建 commit。已有自定义 `pre-commit` hook 时，应将该检查命令合并到现有流程，而不是覆盖已有检查。
-
-本地 hook 可以被 `git commit --no-verify` 绕过；如组织要求不可绕过，还应在代码托管平台侧配置对应的分支保护或服务端检查。
+脚本只判断分支名称，不创建、切换或删除分支，也不安装 Git Hook；Hook 集成由独立的项目配置负责。
 
 ## 退出码
 

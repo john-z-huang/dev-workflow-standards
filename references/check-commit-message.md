@@ -23,16 +23,9 @@ python3 scripts/check-commit-message.py .git/COMMIT_EDITMSG
 python3 scripts/check-commit-message.py --message 'feat: 增加输入校验'
 ```
 
-## 集成方式
+## 边界
 
-Skill 自带的 `.githooks/commit-msg` 只是可复制的 wrapper，不会自动安装到目标项目。
-目标项目必须将该 wrapper 和脚本复制到自己的 `.githooks/`、`scripts/` 目录，再启用版本化 hooks：
-
-```bash
-git config core.hooksPath .githooks
-```
-
-Git 提交模板中的注释行会被忽略。提交信息仍应保持单一模块、简明和可追溯；这些语义约束不能仅靠正则表达式可靠判断。
+脚本只检查提交信息文本，不检查分支、暂存区或提交内容，也不安装 Git Hook。提交是否属于单一模块由上层流程判断。
 
 ## 退出码
 

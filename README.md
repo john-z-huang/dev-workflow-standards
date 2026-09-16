@@ -33,14 +33,22 @@ Skill 被加载并不等于目标项目已经启用 Git 校验。使用本 Skill
 
 ### 快速检查清单
 
-详细检查清单（包括开始新功能前、提交前、发起 PR 前、PR 合并后的各项检查项）请参阅 [SKILL.md](./SKILL.md) 中的附录部分。
+详细的顺序执行队列和状态记录模板请先参阅 [`workflows/index.md`](./workflows/index.md) 及对应工作流文档；具体规则仍以 [SKILL.md](./SKILL.md) 和 `references/` 为准。
 
 ## 项目结构
 
 ```
 dev-workflow-standards/
-├── SKILL.md                    # Skill 定义与完整规范文档
+├── SKILL.md                    # Skill 元数据与入口导航
 ├── README.md                   # 本文件
+├── workflows/                  # 场景导航和顺序队列
+│   ├── index.md                # 入口、场景选择和完成门禁
+│   ├── standard-development.md # 无 GitHub 交付的普通任务
+│   ├── worktree-development.md # 有 remote 的 worktree 开发与串行交付
+│   ├── github-delivery.md      # Issue/PR、认证、标签和 Squash Merge
+│   ├── verification-and-cleanup.md # 验证、Hook 检查和合并后处理
+│   ├── special-operations.md   # Hook、自动化和历史标题重写
+│   └── recovery-and-exceptions.md # 阻塞、冲突和安全停止
 ├── .githooks/
 │   ├── commit-msg              # 调用提交信息检查器
 │   └── pre-commit              # 调用分支名和暂存区检查器
@@ -70,7 +78,7 @@ dev-workflow-standards/
 
 ## 自动化脚本
 
-本 Skill 提供独立的、可移植的自动化脚本，遵循「清晰文档 + 通用脚本」模式（详见 SKILL.md 中「自动化案例」章节）。各脚本的完整使用说明存放于 `references/` 目录：
+本 Skill 提供独立的、可移植的自动化脚本，遵循「清晰文档 + 通用脚本」模式。各脚本的完整使用说明存放于 `references/` 目录：
 
 - **`scripts/pr-merge-cleanup.py`** — PR 合并后自动清理：确认合并状态、同步 main、删除本地特性分支。用法：`python3 scripts/pr-merge-cleanup.py <PR编号>`（详见 [`references/pr-merge-cleanup.md`](./references/pr-merge-cleanup.md)）
 
