@@ -2,7 +2,7 @@
 
 ## 功能描述
 
-在 Pull Request 合并后，自动执行标准化清理流程：确认 PR 合并状态，读取 PR 实际 base/head，使用 fast-forward-only 模式同步 base 分支，并删除本地已合并 head 分支。该流程对应 SKILL.md 中「PR 合并后」检查清单中的操作步骤。
+在 Pull Request 合并后，确认 PR 的 base/head，使用 fast-forward-only 模式同步 base 分支，并删除本地已合并 head 分支。
 
 ## 触发时机
 
@@ -26,11 +26,9 @@ python3 scripts/pr-merge-cleanup.py 42 feat/add-validation
 python3 scripts/pr-merge-cleanup.py 42 --repo owner/repo
 ```
 
-## 集成方式
+## 边界
 
-- **人工或自动化流程调用**：PR 合并后执行 `python3 scripts/pr-merge-cleanup.py <PR编号>` 完成清理。
-- **Git Hooks**：可在自定义 hook 脚本中调用，但注意 `git` hook 无法自动获取 PR 编号，需额外传参。
-- **CI/CD**：在 PR 合并触发的 CI 流水线末尾添加清理步骤（适用于需要清理本地工作区的场景）。
+脚本只清理本地已合并 head 分支，不合并 PR、不删除远端分支，也不处理未合并分支。
 
 ## 退出码
 

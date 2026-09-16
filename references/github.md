@@ -53,4 +53,3 @@
   4. **创建后核验**：Issue 使用 `gh issue view <编号> --json assignees`，PR 使用 `gh pr view <编号> --json assignees`，或集成层等效读取操作，确认本人账号确实在 assignees 中。若指派失败、当前身份不可被指派或工具缺少必要能力，应明确报告阻塞，不得把 Issue/PR 创建流程视为完成。
 - 实现改动必须通过 Pull Request 合并，并在 PR 描述中通过 `Closes #<Issue 编号>`（或等效关键字）关联对应的开放 Issue。
 - 未关联任何开放 Issue 时，禁止将本地改动推送到 GitHub。
-- 可使用只读脚本 `scripts/check-pr-policy.py` 检查 Issue 开放状态、PR 关联关键词以及显式指定的 base/head 拓扑；该脚本不替代 Issue/PR 的创建、审核和合并授权。

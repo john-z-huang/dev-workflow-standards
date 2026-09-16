@@ -14,7 +14,7 @@
 ## 触发时机
 
 - 创建 PR 后、请求审核前执行；
-- 对堆叠 PR 进行拓扑核验时执行；
+- 对需要核验 PR 拓扑时执行；
 - 也可以在 CI 中作为只读策略检查。
 
 该检查不放入每次本地 `pre-push`，因为它需要网络和 GitHub 授权，且推送前可能尚未存在 PR。
@@ -35,7 +35,7 @@ python3 scripts/check-pr-policy.py \
   --expected-head feat/add-validation
 ```
 
-`--expected-base` 和 `--expected-head` 必须与 `--pr` 一起使用。对于堆叠 PR，应将实际依赖分支作为 `--expected-base` 传入，而不是默认假设 `main`。
+`--expected-base` 和 `--expected-head` 必须与 `--pr` 一起使用；base 可以是任意已明确核验的目标分支，不默认假设为 `main`。
 
 ## 约束边界
 
