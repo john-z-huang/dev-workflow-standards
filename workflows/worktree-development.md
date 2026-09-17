@@ -40,7 +40,7 @@ pull 成功且 worktree 建立后，按清单复制相同相对路径并校验�
 
 ## 5. 在 worktree 中实现
 
-在需求 worktree 中完成实现、验证、暂存和提交；只纳入本任务文件/hunk。提交信息按 [`check-commit-message.md`](../references/check-commit-message.md) 检查；推送前读取 [`github-delivery.md`](github-delivery.md)，并完成 [`verification-and-cleanup.md`](verification-and-cleanup.md) 中的适用检查。
+在需求 worktree 中完成代码理解、实现、验证、暂存和提交；只纳入本任务文件/hunk。进入代码理解前，按 [`code-understanding.md`](../references/code-understanding.md) 使用需求 worktree 的准确路径重新激活 Serena 项目，不得继续使用原始工作区的 Serena 上下文分析需求代码。提交信息按 [`check-commit-message.md`](../references/check-commit-message.md) 检查；推送前读取 [`github-delivery.md`](github-delivery.md)，并完成 [`verification-and-cleanup.md`](verification-and-cleanup.md) 中的适用检查。
 
 ## 6. 处理堆叠依赖
 

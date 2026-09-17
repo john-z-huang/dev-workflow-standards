@@ -41,6 +41,8 @@ git diff --cached --check
 
 分支、提交标题和暂存区规则分别见 [`check-branch-name.md`](../references/check-branch-name.md)、[`check-commit-message.md`](../references/check-commit-message.md) 和 [`check-staged-changes.md`](../references/check-staged-changes.md)。Hook 接入见 [`hooks.md`](../references/hooks.md)；`--no-verify` 可绕过本地 Hook，但不能代替等效检查。
 
+代码变更可按 [`code-understanding.md`](../references/code-understanding.md) 使用 Serena 的诊断、引用和实现关系进行辅助检查，但不能替代测试、构建、lint、类型检查或集成验证。
+
 ## 4. PR 策略
 
 创建 PR/请求审核前按 [`check-pr-policy.md`](../references/check-pr-policy.md) 运行 `scripts/check-pr-policy.py`，确认 Issue/PR 开放、base/head 正确和正文关联 Issue。

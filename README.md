@@ -19,6 +19,7 @@
 - **网络与认证排查** — `GH_TOKEN` 安全处理、代理环境下的认证排查顺序
 - **禁止独占功能** — 禁用特定 Code Agent 的 Hooks 等专有功能，统一使用可移植的 Shell/Python 脚本实现自动化
 - **自动化案例** — 提供 PR 合并后清理等可移植 Python 脚本，附完整文档与集成说明
+- **本地代码理解** — 在 Serena MCP 可用时优先使用符号、引用和语言服务能力分析源代码，并为不适用或不可用场景定义安全降级
 
 ## 安装与使用
 
@@ -60,6 +61,7 @@ dev-workflow-standards/
 │   ├── rewrite_weather_commit_subjects.py # 历史提交标题重写脚本
 │   └── pr-merge-cleanup.py       # PR 合并后清理脚本
 ├── references/
+│   ├── code-understanding.md  # 本地代码理解与 Serena 优先规则
 │   ├── check-branch-name.md     # Commit 前分支名检查使用说明
 │   ├── check-commit-message.md   # Commit message 检查使用说明
 │   ├── check-pr-policy.md        # Issue/PR 审计使用说明
