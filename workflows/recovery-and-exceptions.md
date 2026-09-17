@@ -30,6 +30,7 @@ NEED=<输入/授权/网络/认证/决定>  PRESERVED=<现场>
 - 目标路径已被主分支提供：不覆盖。
 - PR base/head/Issue 错误：停止推送/合并，先读取实际状态；共享分支错误用 `git revert`，不擅自改写历史。
 - Git 冲突需要新业务/架构决定：停止；只有已批准内容的机械冲突可解决。
+- Serena 未暴露、项目激活失败或语言服务器异常时，按 [`code-understanding.md`](../references/code-understanding.md) 降级到普通文件工具；若缺少调用链、类型关系或影响范围证据，停止并报告具体影响。
 
 ## 3. 修复并重验
 

@@ -22,6 +22,7 @@
 | GitHub 网络、认证、Issue、标签、assignee 或 PR 流程 | [`../references/github.md`](../references/github.md) |
 | PR 合并到 `main` 的方式 | [`../references/squash-merge.md`](../references/squash-merge.md) |
 | 创建 PR 前检查 Issue、关联关系或 base/head | [`../references/check-pr-policy.md`](../references/check-pr-policy.md) |
+| 本地代码探索、逻辑分析、符号引用和调用链 | [`../references/code-understanding.md`](../references/code-understanding.md) |
 | 手动处理已合并 PR 的本地分支 | [`../references/merge-cleanup.md`](../references/merge-cleanup.md) |
 | 用脚本自动处理 PR 合并后的清理 | [`../references/pr-merge-cleanup.md`](../references/pr-merge-cleanup.md) |
 | 分支名不符合项目约定 | [`../references/check-branch-name.md`](../references/check-branch-name.md) |
