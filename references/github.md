@@ -4,6 +4,7 @@
 - GitHub 操作优先通过 GitHub CLI（`gh`）执行。若开发环境是云端容器且未安装 `gh` CLI，可改用当前 Code Agent 已授权的 GitHub Connector 或 GitHub App 集成层执行等效操作；不得因为缺少 `gh` CLI 而改用浏览器或浏览器自动化工具。
 - 使用 GitHub Connector 或 GitHub App 集成层时，必须确认该集成已获得目标仓库及当前操作所需的授权，并遵循其工具接口的参数、确认和返回值约定；不得要求用户在对话中粘贴访问令牌，也不得自行猜测或伪造授权信息。
 - 无论使用 `gh` CLI 还是已授权集成层，都必须显式核对仓库、Issue、PR、base/head 分支及操作结果；集成层应提供与下述 `gh` 示例等价的查询、创建、更新、评论、合并和核验能力。
+- 用户明确要求将改动推送到 GitHub 时，该请求同时授权为本次交付自动创建缺失的相关 Issue 和关联 PR；不再主动询问是否创建 Issue 或 PR。创建 PR 后保持其开放状态，本 Skill 不自动关闭或合并 PR。
 
   **正确做法**：使用 `gh issue create --title "..." --body "..." --label "enhancement" --assignee "@me"`，或调用已授权 GitHub Connector / GitHub App 的等效 Issue 创建操作并通过 `labels`、`assignees` 参数附加分类标签和本人责任人；使用 `gh pr create --title "..." --body "..." --assignee "@me"`，或调用其等效 PR 创建操作并确保创建后立即完成本人指派。
 
@@ -31,7 +32,7 @@
 
 ### Issue 与 PR 流程
 
-- 进入 GitHub 协作流程时，新增功能或修复须关联开放 Issue；本地审查和已授权的本地修改可先完成，不因尚未建立 Issue 阻塞。推送前必须补齐开放 Issue。
+- 进入 GitHub 协作流程时，新增功能或修复须关联开放 Issue；本地审查和已授权的本地修改可先完成。用户明确要求推送时，若没有相关联的开放 Issue，直接按本文件规则创建并核验，推送前必须补齐开放 Issue。
 - Issue 必须清晰、详细地说明以下内容：
   - 功能需求或缺陷表现
   - 影响范围
