@@ -1,6 +1,6 @@
 # GitHub 交付工作流
 
-只用 `gh` CLI 或已授权 GitHub Connector/App；禁止浏览器/浏览器自动化。该工作流不自动授予网络、认证、推送、Issue、PR 或合并权限。
+只用 `gh` CLI 或已授权 GitHub Connector/App；禁止浏览器/浏览器自动化。加载本工作流本身不授予网络、认证、推送、Issue、PR 或合并权限；但用户明确要求将改动推送到 GitHub 时，该请求授权按本流程自动补建缺失 Issue、推送分支并创建关联 PR，不再另行询问。该授权不包含自动关闭或合并 PR。
 
 操作细节：[`github.md`](../references/github.md)；PR 审计：[`check-pr-policy.md`](../references/check-pr-policy.md)；合并方式：[`squash-merge.md`](../references/squash-merge.md)。
 
@@ -24,7 +24,7 @@
 
 ## 2. 准备 Issue
 
-推送前必须有开放 Issue。Issue 至少写清需求/缺陷、影响、预期行为、验收标准；必要时写复现、约束和依赖。
+推送前必须有开放 Issue。用户明确要求推送时，如果没有相关联的开放 Issue，直接创建并完成核验，不再主动询问。Issue 至少写清需求/缺陷、影响、预期行为、验收标准；必要时写复现、约束和依赖。
 
 1. 用 `gh api user --jq .login` 获取当前账号。
 2. 先读取现有 labels，选择至少一个工作类型 label（优先仓库已有标签）。
@@ -37,6 +37,7 @@
 
 ## 4. 创建/检查 PR
 
+- 用户明确要求推送时，推送成功后默认创建关联 PR，不再主动询问；创建后保持 PR 开放，不自动关闭或合并。
 - 显式确认仓库、base、head、Issue；堆叠 PR 不默认用 main。
 - 正文用 `Closes #`、`Fixes #` 或 `Resolves #` 关联开放 Issue，说明范围和验收。
 - 创建时默认指派当前账号；接口不支持时立即补写并回读。
