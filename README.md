@@ -7,10 +7,12 @@
 本 Skill 涵盖以下核心规范：
 
 - **Git 分支命名规范** — ASCII 字符、小写英文、类别前缀（`feat/`、`fix/`、`docs/`、`refactor/`、`agent/` 等）
+- **可选 Worktree 隔离** — 默认直接在当前工作区开发；仅用户明确要求时创建 worktree，并按门禁执行同步、未跟踪文件处理和串行交付
 - **Commit 前分支名检查** — 通过标准 Git `pre-commit` hook 和正则表达式检查分支格式并拦截特定产品名称
 - **Commit message 检查** — 通过标准 Git `commit-msg` hook 检查 `<type>: 中文说明` 标题格式、中文说明和禁止署名声明
 - **暂存区检查** — 通过标准 Git `pre-commit` hook 检查空白错误，并可运行项目测试
 - **Issue/PR 策略审计** — 通过 `gh` REST API 只读检查状态、关联关系和 base/head
+- **Issue/PR 描述文件** — 创建 Issue/PR 前先生成 Markdown 描述文件，再通过 `gh ... --body-file` 传入，避免命令行内联 Markdown 解析错误
 - **提交规范** — 以可独立验证的功能模块为提交边界，提交信息使用中文，测试通过后方可提交
 - **提交署名约束** — 禁止在提交信息、PR 描述等位置声明 Code Agent 署名（如 `Generated with`、`Co-Authored-By`）
 - **GitHub 操作流程** — 所有 GitHub 操作通过 `gh` CLI 执行，禁止浏览器操作
@@ -44,8 +46,8 @@ dev-workflow-standards/
 ├── README.md                   # 本文件
 ├── workflows/                  # 场景导航和顺序队列
 │   ├── index.md                # 入口、场景选择和完成门禁
-│   ├── standard-development.md # 无 GitHub 交付的普通任务
-│   ├── worktree-development.md # 有 remote 的 worktree 开发与串行交付
+│   ├── standard-development.md # 默认在当前工作区执行的普通任务
+│   ├── worktree-development.md # 明确要求时的 worktree 开发与串行交付
 │   ├── github-delivery.md      # Issue/PR、认证、标签和 Squash Merge
 │   ├── verification-and-cleanup.md # 验证、Hook 检查和合并后处理
 │   ├── special-operations.md   # Hook、自动化和历史标题重写

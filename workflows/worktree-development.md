@@ -1,5 +1,7 @@
 # Git Worktree 工作流
 
+适用：仅当用户在当前指令中明确要求使用或创建 worktree 时。仓库存在 remote、需要 GitHub 交付、需要分支或存在并行工作项，都不会单独触发本工作流；未明确要求时按 [`standard-development.md`](standard-development.md) 在当前工作区执行。
+
 操作细节：[`worktree.md`](../references/worktree.md)；依赖拓扑：[`stacked-pr.md`](../references/stacked-pr.md)；分支命名：[`check-branch-name.md`](../references/check-branch-name.md)；提交信息：[`check-commit-message.md`](../references/check-commit-message.md)。原始工作区只同步主分支和管理 worktree；需求实现、验证、暂存、提交在需求 worktree 中完成。
 
 ## 队列

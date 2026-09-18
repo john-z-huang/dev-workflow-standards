@@ -6,7 +6,7 @@
 - 无论使用 `gh` CLI 还是已授权集成层，都必须显式核对仓库、Issue、PR、base/head 分支及操作结果；集成层应提供与下述 `gh` 示例等价的查询、创建、更新、评论、合并和核验能力。
 - 用户明确要求将改动推送到 GitHub 时，该请求同时授权为本次交付自动创建缺失的相关 Issue 和关联 PR；不再主动询问是否创建 Issue 或 PR。创建 PR 后保持其开放状态，本 Skill 不自动关闭或合并 PR。
 
-  **正确做法**：使用 `gh issue create --title "..." --body "..." --label "enhancement" --assignee "@me"`，或调用已授权 GitHub Connector / GitHub App 的等效 Issue 创建操作并通过 `labels`、`assignees` 参数附加分类标签和本人责任人；使用 `gh pr create --title "..." --body "..." --assignee "@me"`，或调用其等效 PR 创建操作并确保创建后立即完成本人指派。
+  **正确做法**：先将完整 Issue 正文生成到本地 Markdown 文件，再使用 `gh issue create --title "..." --body-file <issue-body-file> --label "enhancement" --assignee "@me"`；先将完整 PR 正文生成到本地 Markdown 文件，再使用 `gh pr create --title "..." --body-file <pr-body-file> --assignee "@me"`。不得在 `gh issue create` 或 `gh pr create` 的 `--body` 参数、命令替换、here-document 或其他命令行内联参数中直接传入 Markdown 正文。调用已授权 GitHub Connector / GitHub App 时，使用其等效正文参数，并通过 `labels`、`assignees` 参数附加分类标签和本人责任人。
 
   **错误做法**：在浏览器中打开 `github.com` 手动创建 Issue/PR、使用 Playwright/Selenium 等浏览器自动化工具操作 GitHub 页面。
 
@@ -33,6 +33,7 @@
 ### Issue 与 PR 流程
 
 - 进入 GitHub 协作流程时，新增功能或修复须关联开放 Issue；本地审查和已授权的本地修改可先完成。用户明确要求推送时，若没有相关联的开放 Issue，直接按本文件规则创建并核验，推送前必须补齐开放 Issue。
+- 使用 `gh` CLI 创建 Issue 或 PR 前，必须先把完整描述内容写入本地 `.md` 文件，再通过 `--body-file <path>` 传入。Issue 使用独立的 Issue 正文文件，PR 使用独立的 PR 正文文件；标题、标签、assignee、base/head 等非 Markdown 参数可以继续直接传入命令行。不要使用 `--body` 或其他命令行内联方式传入 Markdown 正文，以免 shell 转义或 Markdown 解析错误。
 - Issue 必须清晰、详细地说明以下内容：
   - 功能需求或缺陷表现
   - 影响范围

@@ -28,18 +28,19 @@
 
 1. 用 `gh api user --jq .login` 获取当前账号。
 2. 先读取现有 labels，选择至少一个工作类型 label（优先仓库已有标签）。
-3. 创建时同时写入 label 和 `--assignee @me`，创建后回读状态、label、assignee。
-4. 只有集成不能枚举 labels 但能写入/回读时，才使用可靠证据或保守候选降级；写入失败且修正后仍失败，禁止推送。
+3. 先将完整 Issue 描述生成到本地 Markdown 文件，例如 `issue-body.md`；然后使用 `gh issue create ... --body-file issue-body.md --label "<类别标签>" --assignee "@me"` 创建。禁止在 `--body` 或其他命令行参数中直接内联 Markdown 正文。
+4. 创建时同时写入 label 和 `--assignee @me`，创建后回读状态、label、assignee。
+5. 只有集成不能枚举 labels 但能写入/回读时，才使用可靠证据或保守候选降级；写入失败且修正后仍失败，禁止推送。
 
 ## 3. 推送
 
-推送前确认：用户授权；正确 worktree/分支/remote；开放 Issue、类别 label、本人 assignee；测试和检查通过；分支/提交/暂存范围合规；堆叠 PR 的 base 已明确。
+推送前确认：用户授权；正确工作区（如采用 worktree 则为正确 worktree）、分支和 remote；开放 Issue、类别 label、本人 assignee；测试和检查通过；分支/提交/暂存范围合规；堆叠 PR 的 base 已明确。
 
 ## 4. 创建/检查 PR
 
 - 用户明确要求推送时，推送成功后默认创建关联 PR，不再主动询问；创建后保持 PR 开放，不自动关闭或合并。
 - 显式确认仓库、base、head、Issue；堆叠 PR 不默认用 main。
-- 正文用 `Closes #`、`Fixes #` 或 `Resolves #` 关联开放 Issue，说明范围和验收。
+- 先将完整 PR 描述生成到本地 Markdown 文件，例如 `pr-body.md`；在正文中用 `Closes #`、`Fixes #` 或 `Resolves #` 关联开放 Issue，并说明范围和验收。然后使用 `gh pr create ... --body-file pr-body.md ...` 创建，禁止在 `--body` 或其他命令行参数中直接内联 Markdown 正文。
 - 创建时默认指派当前账号；接口不支持时立即补写并回读。
 - 创建后核验 state/base/head/关联/assignee，并按 [`check-pr-policy.md`](../references/check-pr-policy.md) 运行只读审计。
 
