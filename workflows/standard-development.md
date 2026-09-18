@@ -1,6 +1,6 @@
 # 普通开发工作流
 
-适用：无 remote、无需 GitHub，或用户只要求本地结果。若发现 Git 仓库有可同步 remote，改读 [`worktree-development.md`](worktree-development.md)。
+适用：默认直接在当前工作区开发，无论仓库是否有 remote、是否需要 GitHub 交付或是否需要分支。只有用户在指令中明确要求使用或创建 worktree 时，才改读 [`worktree-development.md`](worktree-development.md)。
 
 ## 队列
 
@@ -16,7 +16,7 @@
 ## 1. 明确需求
 
 - 明确目标、输入、输出、不可改变项和验收标准。
-- 确认是否需要 remote/worktree、GitHub、Hook、自动化或历史重写；需要时改读索引中的对应工作流。
+- 确认是否需要 remote、GitHub、Hook、自动化或历史重写；只有用户明确要求 worktree 时才改读 worktree 工作流。存在 remote 本身不改变默认的当前工作区模式。
 - 未获授权的提交、推送、外部消息、合并、删除和历史重写保持禁止。
 - 只读取当前步骤所需的 `references/`。
 

@@ -6,12 +6,14 @@
 
 | 场景 | 读取 |
 |---|---|
-| 无 remote、无需 GitHub、只要本地结果 | [`standard-development.md`](standard-development.md) |
-| Git 仓库有可同步 remote，需要隔离开发 | [`worktree-development.md`](worktree-development.md) |
+| 普通开发（默认不使用 worktree；无论是否有 remote） | [`standard-development.md`](standard-development.md) |
+| 用户明确要求使用或创建 worktree | [`worktree-development.md`](worktree-development.md) |
 | Issue、推送、PR 或合并 | [`github-delivery.md`](github-delivery.md) |
 | 测试、提交前检查、PR 审计、合并后清理 | [`verification-and-cleanup.md`](verification-and-cleanup.md) |
 | Hook、自动化、历史标题重写 | [`special-operations.md`](special-operations.md) |
 | 阻塞、冲突、失败或无法安全继续 | [`recovery-and-exceptions.md`](recovery-and-exceptions.md) |
+
+未明确要求 worktree 时，remote、GitHub 交付、分支或并行工作项不会改变默认模式；相关 GitHub 操作直接在当前工作区按对应工作流执行。用户明确要求 worktree 且同时需要 Issue/PR/合并时，先按 `worktree-development.md` 准备工作区，再按 `github-delivery.md` 交付。
 
 ## 按问题选择参考文档
 
