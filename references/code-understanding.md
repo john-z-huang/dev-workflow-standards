@@ -16,6 +16,12 @@
 4. 分析影响范围和调用关系时使用 `find_referencing_symbols`、`find_implementations`；需要语言服务反馈时使用 `get_diagnostics_for_file`。
 5. 不确定符号名称但需要寻找候选位置时，可先使用 Serena 的 `search_for_pattern`，再回到符号工具进行精确分析。
 
+## CUDA 代码理解
+
+- 需要理解 CUDA 代码（包括 `.cu`、`.cuh` 文件，或包含 CUDA 语法的主机/设备代码）时，优先通过 Serena 使用已配置的 C++ LSP/clangd 进行符号、引用和诊断分析。
+- 即使本地没有安装 CUDA 库和头文件，也先按 C++ 代码路径进行解析；不要因为缺少 CUDA 依赖就立即安装依赖、修改项目配置或改用大段文本读取。
+- 如果 C++ LSP/clangd 无法解析或语言服务未就绪，再按本文件的普通文件工具降级规则处理，并明确记录降级及其对调用链、类型关系或影响范围判断的限制。
+
 ## 普通文件工具的边界
 
 - Git 状态、差异、分支和 worktree 仍使用 Git 命令；Serena 不替代仓库状态检查。
