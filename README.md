@@ -8,6 +8,8 @@
 
 - **Git 分支命名规范** — ASCII 字符、小写英文、类别前缀（`feat/`、`fix/`、`docs/`、`refactor/`、`agent/` 等）
 - **可选 Worktree 隔离** — 默认直接在当前工作区开发；仅用户明确要求时创建 worktree，并按门禁执行同步、未跟踪文件处理和串行交付
+- **Fork 分支维护（条件启用）** — 仅当 GitHub 仓库存在 `parent`、确认是 Fork 时，才让 `main` 镜像 `upstream`，并把个人长期改动放入 `personal-<project>`（或 `personal/<project>`）
+- **双分支保护（条件启用）** — 仅对 Fork 通过 GitHub Ruleset/Branch protection 保护 `main` 与个人维护分支；独立开发仓库不受该规则影响
 - **Commit 前分支名检查** — 通过标准 Git `pre-commit` hook 和正则表达式检查分支格式并拦截特定产品名称
 - **Commit message 检查** — 通过标准 Git `commit-msg` hook 检查 `<type>: 中文说明` 标题格式、中文说明和禁止署名声明
 - **暂存区检查** — 通过标准 Git `pre-commit` hook 检查空白错误，并可运行项目测试
@@ -63,6 +65,7 @@ dev-workflow-standards/
 │   ├── rewrite_weather_commit_subjects.py # 历史提交标题重写脚本
 │   └── pr-merge-cleanup.py       # PR 合并后清理脚本
 ├── references/
+│   ├── fork-maintenance.md     # Fork 上游同步、个人分支和 GitHub 保护规则
 │   ├── code-understanding.md  # 本地代码理解与 Serena 优先规则
 │   ├── check-branch-name.md     # Commit 前分支名检查使用说明
 │   ├── check-commit-message.md   # Commit message 检查使用说明
@@ -100,6 +103,8 @@ dev-workflow-standards/
 
 ```
 agent/docs-branch-naming   ✅ 合规
+personal-serena            ✅ Fork 的个人长期维护分支
+personal/my-project        ✅ Fork 的层级个人维护分支
 fix/batch-result-validation ✅ 合规
 feat/async-batch-submit    ✅ 合规
 agent/更新-git-规则         ❌ 含非 ASCII 字符
@@ -122,9 +127,22 @@ feat: 批量处理、文档优化与代码清理         ❌ 混入多个不相�
 ```bash
 gh pr view <PR编号> --json state,mergedAt,baseRefName,headRefName  # 确认已合并
 git switch main                                                 # 切换到 main
-git pull --ff-only origin main                                  # 拉取更新
 git branch -d <分支名称>                     # 删除本地分支
 ```
+
+普通仓库在清理前使用 `git pull --ff-only origin main`；个人 Fork 按上游同步流程更新 `main`，不要把个人维护分支或需求分支的提交推送到 `main`。
+
+### Fork 维护流程
+
+```bash
+git fetch upstream main
+git switch main
+git merge --ff-only upstream/main
+git push origin main
+git switch personal-<project>
+```
+
+需求分支从个人维护分支创建，PR 的 base 也指向个人维护分支；不要把个人改动直接推送到 `main`。完整步骤见 [`references/fork-maintenance.md`](./references/fork-maintenance.md)。
 
 ## 许可
 

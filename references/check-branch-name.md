@@ -8,10 +8,10 @@
 
 名单集中定义在脚本的 `FORBIDDEN_AGENT_NAMES` 常量中。匹配为产品名子串匹配，例如 `feat/codex-api` 和 `fix/CURSOR-timeout` 都会被拦截。
 
-除 `main` 和 `master` 外，工作分支必须符合以下格式：
+除 `main` 和 `master` 外，工作分支必须符合以下格式。`personal-<project>` 用于个人 Fork 的长期维护分支，`personal/<project>` 也可用于需要层级命名的仓库：
 
 ```text
-^(?:agent|feat|fix|docs|refactor)/[a-z0-9]+(?:-[a-z0-9]+)*(?:/[a-z0-9]+(?:-[a-z0-9]+)*)*$
+^(?:(?:agent|feat|fix|docs|refactor|personal)/[a-z0-9]+(?:-[a-z0-9]+)*(?:/[a-z0-9]+(?:-[a-z0-9]+)*)*|personal-[a-z0-9]+(?:-[a-z0-9]+)*)$
 ```
 
 ## 触发时机

@@ -17,6 +17,7 @@
 
 - 明确目标、输入、输出、不可改变项和验收标准。
 - 确认是否需要 remote、GitHub、Hook、自动化或历史重写；只有用户明确要求 worktree 时才改读 worktree 工作流。存在 remote 本身不改变默认的当前工作区模式。
+- 如果当前任务涉及 GitHub 仓库或 Fork，先按 [`fork-maintenance.md`](../references/fork-maintenance.md) 的判定门禁检查 `parent`；只有确认仓库确实是 Fork，才启用 `origin`/`upstream`、同步用 `main` 和个人维护分支规则。
 - 未获授权的提交、推送、外部消息、合并、删除和历史重写保持禁止。
 - 只读取当前步骤所需的 `references/`。
 
@@ -32,6 +33,14 @@
 - 任务需要理解源代码逻辑时，按 [`code-understanding.md`](../references/code-understanding.md) 在本地环境优先使用 Serena MCP。
 - 先形成相关文件、符号、引用关系和影响范围的最小理解，再开始实现。
 - 纯文档、机械修改或 Serena 不可用时，按参考文档选择普通文件工具，并记录跳过或降级原因。
+
+## Fork 仓库的默认分支边界（仅对已确认的 Fork 生效）
+
+- 使用 `gh repo view --json parent,defaultBranchRef` 判断仓库类型：`parent` 非空才是 Fork；`parent` 为空表示独立仓库，跳过本节，不创建个人维护分支，也不增加双分支保护要求。
+- Fork 的 `main` 只用于镜像上游默认分支：先同步 `upstream/main`，再以 fast-forward 方式更新 `origin/main`。
+- 个人改动必须从个人维护分支或其需求分支进入；不得直接在 `main` 上提交、开发或推送。
+- 需求分支的 PR 默认以个人维护分支为 base，而不是以 `main` 为 base；将 `main` 更新带入个人维护分支时，也必须经过该分支的 PR 保护规则。
+- `main` 和个人维护分支都应通过 GitHub Ruleset/Branch protection 长期保护；至少禁止删除和强制推送，个人维护分支还应要求通过 PR。
 
 ## 4. 实现
 

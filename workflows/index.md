@@ -22,6 +22,7 @@
 | remote、worktree、未跟踪文件、空远端、串行交付或合并后 worktree 状态 | [`../references/worktree.md`](../references/worktree.md) |
 | 依赖未合并分支，需要确定 PR 的 base/head | [`../references/stacked-pr.md`](../references/stacked-pr.md) |
 | GitHub 网络、认证、Issue、标签、assignee 或 PR 流程 | [`../references/github.md`](../references/github.md) |
+| 维护个人 Fork、同步 upstream 和保护 main/个人分支 | [`../references/fork-maintenance.md`](../references/fork-maintenance.md) |
 | PR 合并到 `main` 的方式 | [`../references/squash-merge.md`](../references/squash-merge.md) |
 | 创建 PR 前检查 Issue、关联关系或 base/head | [`../references/check-pr-policy.md`](../references/check-pr-policy.md) |
 | 本地代码探索、逻辑分析、符号引用和调用链 | [`../references/code-understanding.md`](../references/code-understanding.md) |
