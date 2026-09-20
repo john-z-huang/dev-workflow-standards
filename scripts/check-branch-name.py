@@ -56,11 +56,12 @@ FORBIDDEN_AGENT_NAME_PATTERN = re.compile(
 
 # main/master 是受保护的根分支，不要求带类别前缀；其他工作分支必须使用
 # 文档中规定的类别前缀，并且每一级只允许小写字母、数字和连字符。
+# personal-<project> 是个人 Fork 的长期维护分支，可与 personal/<project> 互换使用。
 ROOT_BRANCH_NAMES = frozenset({"main", "master"})
 WORK_BRANCH_PATTERN = re.compile(
-    r"^(?:agent|feat|fix|docs|refactor)/"
-    r"[a-z0-9]+(?:-[a-z0-9]+)*"
-    r"(?:/[a-z0-9]+(?:-[a-z0-9]+)*)*$"
+    r"^(?:(?:agent|feat|fix|docs|refactor|personal)/"
+    r"[a-z0-9]+(?:-[a-z0-9]+)*(?:/[a-z0-9]+(?:-[a-z0-9]+)*)*"
+    r"|personal-[a-z0-9]+(?:-[a-z0-9]+)*)$"
 )
 
 

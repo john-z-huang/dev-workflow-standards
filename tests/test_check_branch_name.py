@@ -58,6 +58,12 @@ class CheckBranchNameTests(unittest.TestCase):
         result = run_checker("main")
         self.assertEqual(result.returncode, 0)
 
+    def test_allows_personal_fork_branches(self) -> None:
+        for branch_name in ("personal-serena", "personal/my-project"):
+            with self.subTest(branch_name=branch_name):
+                result = run_checker(branch_name)
+                self.assertEqual(result.returncode, 0)
+
     def test_blocks_invalid_branch_format(self) -> None:
         for branch_name in (
             "feature/add-validation",
@@ -65,6 +71,7 @@ class CheckBranchNameTests(unittest.TestCase):
             "feat/add_validation",
             "update-docs",
             "feat/add--validation",
+            "personal_maintenance",
         ):
             with self.subTest(branch_name=branch_name):
                 result = run_checker(branch_name)

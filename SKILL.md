@@ -2,8 +2,8 @@
 name: dev-workflow-standards
 description: >-
   通用开发工作流规范：默认直接在当前工作区开发；用户明确要求时提供 Git worktree 隔离与串行交付、分支命名与提交约定、禁止 Code Agent 署名、
-  GitHub Issue/PR 流程、堆叠 PR 的 base/head 分支管理、gh CLI 与 GitHub 集成层操作规范、GH_TOKEN 安全处理、网络与认证排查、
-  禁止特定 Code Agent 独占功能、中文文档与提交语言要求、顺序工作流。适用于任何需要严格开发纪律的项目。
+  GitHub Issue/PR 流程、Fork 上游同步与个人维护分支、双分支保护规则、堆叠 PR 的 base/head 分支管理、gh CLI 与 GitHub 集成层操作规范、
+  GH_TOKEN 安全处理、网络与认证排查、禁止特定 Code Agent 独占功能、中文文档与提交语言要求、顺序工作流。适用于任何需要严格开发纪律的项目。
 ---
 
 # 通用开发规范
