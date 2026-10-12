@@ -18,12 +18,12 @@
 
 ## Serena 项目初始化、Onboarding 与 Memory
 
-- 本地 Serena MCP 可用且项目根目录可访问时，激活该准确目录作为 Serena 项目；若 Serena 尚未为该目录建立项目配置，按其默认项目设置初始化。
-- 项目尚未 onboarding 时调用 `onboarding`，并按工具返回的步骤收集项目事实、写入项目 Memory。首次写入前必须先读取 `memory_maintenance`，遵守其中的命名、引用、内容风格和维护约定。
-- 使用 Serena 的项目 Memory（`.serena/memories/`）保存适合后续 Agent 查阅的稳定项目说明、约定和可复用背景；按需要创建或更新记忆，并用 `mem:` 引用关联记忆。面向后续 Agent 阅读的项目说明、约定和会话交接说明均使用简体中文记录；技术术语、符号名、命令、路径和 `mem:` 引用保留 canonical 原文。Memory 是项目文档的补充，不替代仓库中的规范文档、代码或其他权威来源。
-- 用户要求跨会话延续，或当前工作需要交接时，可写入精简的会话上下文：目标、已确认决定、当前状态、相关路径、最新验证结果、未决事项和下一步。只在有复用价值的里程碑更新，不记录逐条工具日志。
-- 不把 Serena Memory 当作父 Session 的实时任务控制记录；mode/count、分配、当前 slice 和授权仍由父 Session 持有。不得写入凭据、秘密、原始对话转录、完整日志或完整 diff。
-- 项目 Memory 存在项目目录内，是否进入版本控制由该仓库的忽略和协作约定决定；不要为了保存记忆而擅自修改 `.gitignore`。
+- 在准确的项目根目录通过 Serena MCP 调用 `activate_project`，并传入该目录的绝对路径；首次激活会隐式创建项目配置。也可在该目录运行 `serena project create .` 初始化项目（默认自动检测语言）。
+- 用 `list_memories` 检查项目 Memory 和 onboarding 状态。首次激活时若项目还没有 Memory，Serena 默认自动运行 onboarding；若检查后仍未完成，再调用 `onboarding`，每个会话最多调用一次，并按工具返回的步骤收集项目事实。
+- 写入任何 Memory 前，先用 `list_memories` 查找维护说明：若存在 `global/memory_maintenance`，优先用 `read_memory` 读取它；否则读取项目的 `memory_maintenance`。只有全局和项目 Memory 都没有维护说明时，onboarding 才在项目 Memory 中生成该说明；其他 onboarding 记忆写入项目的 `.serena/memories/`。
+- 遵守维护说明，先用 `list_memories` 和 `read_memory` 检查相关记忆、避免重复，再用 `write_memory` 将可复用的项目说明、约定及用户要求保存的精简会话交接写入 Serena Memory。交接只记录有复用价值的目标、已确认决定、相关路径、验证结果、未决事项和下一步，不记录逐条工具日志。面向后续 Agent 阅读的内容使用简体中文；技术术语、符号名、命令、路径和 `mem:` 引用保留 canonical 原文，跨记忆引用写作 `` `mem:NAME` ``。
+- Serena Memory 是项目文档的补充，不替代仓库规范、代码或父 Session 的实时任务状态；mode/count、分配、当前 slice 和授权由父 Session 持有。不得写入凭据、秘密、原始对话转录、完整日志或完整 diff。项目 Memory 是否进入版本控制由仓库忽略和协作约定决定；不要为保存 Memory 擅自修改 `.gitignore`。
+- 提交前在项目根目录运行 `serena memories check`，并处理检查报告中的问题。
 
 ## 更新本地源码安装的 Serena
 
@@ -48,8 +48,6 @@
   ```
 
 - 先核实并设置三个变量；路径可含空格，remote 和分支名要取实际值，不要照抄示例。确认 `status --short` 没有输出。若比较结果为 `0 0`，不需要拉取或升级；若本地与上游分叉、安装来源不明或命令失败，保留现场并停止更新。升级后通过 `uv tool list --show-version-specifiers` 核对 `serena-agent` 的 required 来源是预期本地 `file://` URL，并检查 uv tool 目录内对应 `serena_agent-*.dist-info/direct_url.json` 的 `url` 指向 `$SERENA_SOURCE` 且 `dir_info.editable` 为 `true`；核实成功后重启 Serena MCP 服务或 Session，再依赖新代码。不得 stash、重置或强制覆盖。
-
-Serena 的[项目工作流](https://github.com/oraios/serena/blob/main/docs/02-usage/040_workflow.md)、[Memory 和 Onboarding 说明](https://github.com/oraios/serena/blob/main/docs/02-usage/045_memories.md)、[安装与更新说明](https://github.com/oraios/serena/blob/main/docs/02-usage/010_installation.md)，以及 uv 的 [`tool upgrade` 文档](https://docs.astral.sh/uv/reference/cli/#uv-tool-upgrade)维护相关细节。
 
 ## CUDA 代码理解
 
