@@ -10,11 +10,21 @@
 
 ## Serena 优先顺序
 
-1. 开始需要代码理解的任务时，如果本次 Session 尚未读取 Serena 使用说明，先调用 `initial_instructions`；然后激活当前准确的项目根目录。
+1. 开始需要代码理解的任务时，如果本次 Session 尚未读取 Serena 使用说明，先调用 `initial_instructions`；然后以当前仓库或 worktree 的准确根目录调用 `activate_project`。不要用父目录、旧 worktree 或其他 checkout 的 Serena 项目上下文代替当前项目。
 2. 新文件或新模块先使用 `get_symbols_overview` 获取结构概览。
 3. 已知函数、类、方法或其他符号使用 `find_symbol`；只有确实需要时才读取符号体，并避免一次性读取整个源文件。
 4. 分析影响范围和调用关系时使用 `find_referencing_symbols`、`find_implementations`；需要语言服务反馈时使用 `get_diagnostics_for_file`。
 5. 不确定符号名称但需要寻找候选位置时，可先使用 Serena 的 `search_for_pattern`，再回到符号工具进行精确分析。
+
+## Serena 项目初始化、Onboarding 与 Memory
+
+- 在准确的项目根目录通过 Serena MCP 调用 `activate_project`，并传入该目录的绝对路径；首次激活会隐式创建项目配置。也可在该目录运行 `serena project create .` 初始化项目（默认自动检测语言）。
+- 用 `list_memories` 检查项目 Memory 和 onboarding 状态。首次激活时若项目还没有 Memory，Serena 默认自动运行 onboarding；若检查后仍未完成，再调用 `onboarding`，每个会话最多调用一次，并按工具返回的步骤收集项目事实。
+- 写入任何 Memory 前，先用 `list_memories` 查找维护说明：若存在 `global/memory_maintenance`，优先用 `read_memory` 读取它；否则读取项目的 `memory_maintenance`。只有全局和项目 Memory 都没有维护说明时，onboarding 才在项目 Memory 中生成该说明；其他 onboarding 记忆写入项目的 `.serena/memories/`。
+- 遵守维护说明，先用 `list_memories` 和 `read_memory` 检查相关记忆、避免重复，再用 `write_memory` 将可复用的项目说明、约定及用户要求保存的精简会话交接写入 Serena Memory。交接只记录有复用价值的目标、已确认决定、相关路径、验证结果、未决事项和下一步，不记录逐条工具日志。面向后续 Agent 阅读的内容使用简体中文；技术术语、符号名、命令、路径和 `mem:` 引用保留 canonical 原文，跨记忆引用写作 `` `mem:NAME` ``。
+- Serena Memory 是项目文档的补充，不替代仓库规范、代码或父 Session 的实时任务状态；mode/count、分配、当前 slice 和授权由父 Session 持有。不得写入凭据、秘密、原始对话转录、完整日志或完整 diff。项目 Memory 是否进入版本控制由仓库忽略和协作约定决定；不要为保存 Memory 擅自修改 `.gitignore`。
+- 提交前在项目根目录运行 `serena memories check`，并处理检查报告中的问题。
+- 仅在用户明确要求检查本机 uv 安装的 Serena 时检查；若用户只要求检查，发现上游有更新后只报告。只有用户明确要求升级/更新，或检查后明确批准，才可应用更新；按[本地 Serena 更新流程](serena-mcp-tool-upgrade.md)执行。
 
 ## CUDA 代码理解
 

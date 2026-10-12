@@ -26,11 +26,13 @@
 - 先看当前目录和现有差异；保留用户改动。
 - 区分本任务、已有改动、未跟踪文件和无关内容。
 - 记录允许修改的文件/hunk；不覆盖、删除、移动或静默恢复不属于本任务的内容。
+- 本地开发环境中，若当前 Session 暴露 Serena MCP 且目标项目路径可访问，以该仓库或 worktree 的准确根目录激活 Serena 项目；若尚未 onboarding，运行 onboarding，并按 [`code-understanding.md`](../references/code-understanding.md) 启用项目 Memory。
 - 提交边界必须是可独立审查、验证和回滚的逻辑单元。
 
 ## 3. 代码理解
 
 - 任务需要理解源代码逻辑时，按 [`code-understanding.md`](../references/code-understanding.md) 在本地环境优先使用 Serena MCP。
+- 用 Serena Memory 保存可复用的项目说明，以及用户要求跨会话延续时的精简交接上下文；Memory 不能取代规范文档或当前 Session 的任务状态。
 - 先形成相关文件、符号、引用关系和影响范围的最小理解，再开始实现。
 - 纯文档、机械修改或 Serena 不可用时，按参考文档选择普通文件工具，并记录跳过或降级原因。
 
