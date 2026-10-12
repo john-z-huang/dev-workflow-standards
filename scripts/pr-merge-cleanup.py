@@ -87,10 +87,13 @@ def check_pr_merged(pr_number, repo=None):
 
 
 def ensure_clean_working_tree():
-    """确认工作区干净，无未提交变更。"""
+    """确认工作区完全干净，包括暂存、未暂存和未跟踪内容。"""
     result = run_command(["git", "status", "--porcelain"])
     if result.stdout.strip():
-        print("错误: 工作区存在未提交的变更，请先提交或暂存后再执行清理", file=sys.stderr)
+        print(
+            "错误: 工作区存在未提交或未跟踪内容，已停止清理；请先自行处理并确认工作区干净后再运行",
+            file=sys.stderr,
+        )
         sys.exit(1)
 
 
@@ -108,24 +111,54 @@ def pull_latest(base_branch):
     print(f"✓ 已以 fast-forward-only 模式同步 origin/{base_branch}")
 
 
-def delete_branch(branch_name):
-    """删除已合并的本地 head 分支。"""
+def delete_branch(branch_name, merged_head_oid=None):
+    """删除已合并 PR 的本地 head 分支；强制删除要求调用者提供合并前记录的 SHA。"""
     current = run_command(["git", "branch", "--show-current"])
     if current.stdout.strip() == branch_name:
         print(f"错误: 当前仍处于待删除分支 {branch_name}", file=sys.stderr)
         sys.exit(1)
 
+    ensure_clean_working_tree()
+
     result = run_command(["git", "branch", "-d", branch_name], check=False)
-    if result.returncode != 0:
+    if result.returncode == 0:
+        print(f"✓ 已删除本地分支 {branch_name}")
+        return
+
+    if not merged_head_oid:
         print(
-            f"错误: 无法删除分支 {branch_name}（可能已删除或包含未合并提交）",
+            f"错误: 普通删除分支 {branch_name} 失败。若该 PR 使用 Squash merge 或其他重写 ancestry 的方式合并，"
+            "请提供合并前记录的 PR head SHA，通过 --merged-head-oid 显式核验后重试；"
+            "不会使用合并后的 headRefOid 代替历史记录",
             file=sys.stderr,
         )
-        if result.stderr:
-            print(f"  详情: {result.stderr.strip()}", file=sys.stderr)
         sys.exit(3)
 
-    print(f"✓ 已删除本地分支 {branch_name}")
+    local_head = run_command(
+        ["git", "rev-parse", "--verify", f"refs/heads/{branch_name}"],
+        check=False,
+    )
+    if local_head.returncode != 0:
+        print(f"错误: 无法读取本地分支 {branch_name} 的 head SHA，拒绝强制删除", file=sys.stderr)
+        sys.exit(3)
+
+    local_head_oid = local_head.stdout.strip()
+    if local_head_oid.lower() != merged_head_oid.lower():
+        print(
+            f"错误: 本地分支 {branch_name} 的 head SHA 与合并前记录的 PR head SHA 不一致，"
+            "可能包含额外本地提交，拒绝强制删除",
+            file=sys.stderr,
+        )
+        sys.exit(3)
+
+    forced = run_command(["git", "branch", "-D", branch_name], check=False)
+    if forced.returncode != 0:
+        print(f"错误: 无法删除本地分支 {branch_name}", file=sys.stderr)
+        if forced.stderr:
+            print(f"  详情: {forced.stderr.strip()}", file=sys.stderr)
+        sys.exit(3)
+
+    print(f"✓ 已强制删除本地分支 {branch_name}（本地 head SHA 与合并前记录完全一致）")
 
 
 def main():
@@ -148,6 +181,11 @@ def main():
         default=None,
         help="GitHub 仓库，格式为 owner/repo（可选，默认使用当前目录）",
     )
+    parser.add_argument(
+        "--merged-head-oid",
+        default=None,
+        help="合并前记录的 PR head SHA；仅在普通删除失败时用于核验后强制删除",
+    )
     args = parser.parse_args()
 
     ensure_clean_working_tree()
@@ -169,7 +207,7 @@ def main():
 
     switch_to_base(base_branch)
     pull_latest(base_branch)
-    delete_branch(branch_name)
+    delete_branch(branch_name, args.merged_head_oid)
 
     print("\n清理完成！")
 
