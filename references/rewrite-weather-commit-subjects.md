@@ -4,4 +4,4 @@
 
 历史重写会改变提交 SHA，且可能影响共享分支。遇到历史改写请求时，先记录风险与目标范围；若没有覆盖该动作的专用工具，停止并报告，不通过通用命令或直接运行脚本绕过工具边界。
 
-仓库中的 `scripts/rewrite_weather_commit_subjects.py` 是原有兼容资产，不属于 MCP 工具接口，也不是交互式 Skill 工作流的后备执行路径。
+`scripts/rewrite_commit_subjects.py` 是通用兼容脚本，不属于 MCP 工具接口，也不是交互式 Skill 工作流的后备执行路径。
