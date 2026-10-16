@@ -12,4 +12,4 @@
 
 ## 历史标题维护
 
-按 [`rewrite-weather-commit-subjects.md`](../references/rewrite-weather-commit-subjects.md) 确认精确映射。`rewrite_legacy_commit_message` 只转换传入的提交文本，不调用 Git，也不重写历史。实际历史重写、强推或垃圾回收须单独获得明确授权；若没有对应的专用工具，则停止并报告，不能以文本转换工具替代。
+按 [`rewrite-weather-commit-subjects.md`](../references/rewrite-weather-commit-subjects.md) 检查历史提交标题维护的能力边界。当前 MCP 不提供旧标题转换或 Git 历史改写工具；仓库中的兼容脚本也不是交互式工作流的后备执行器。遇到此类请求时保留现场并报告缺少的专用能力，不以任意命令、脚本或其他工具替代。

@@ -36,7 +36,7 @@
 | 将校验脚本和 Hook 接入目标项目 | [`../references/hooks.md`](../references/hooks.md) |
 | Git 元数据写权限或沙箱限制 | [`../references/environment.md`](../references/environment.md) |
 | 查看保留的 Hook 兼容脚本及其 MCP 对应工具 | [`../references/automation-index.md`](../references/automation-index.md) |
-| 请求历史提交标题重写（当前 MCP 工具不执行历史改写） | [`../references/rewrite-weather-commit-subjects.md`](../references/rewrite-weather-commit-subjects.md) |
+| 请求历史提交标题维护（当前 MCP 不提供专用工具） | [`../references/rewrite-weather-commit-subjects.md`](../references/rewrite-weather-commit-subjects.md) |
 
 若问题仍无法归类，停止操作，保留现场并请求最小的补充信息或授权。
 

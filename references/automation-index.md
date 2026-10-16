@@ -9,6 +9,6 @@
 | `scripts/check-staged-changes.py` | Hook 暂存区空白检查；交互式使用 `check_staged_changes`（不运行测试） |
 | `scripts/check-pr-policy.py` | 历史兼容脚本；交互式使用 `audit_issue_pr_policy` |
 | `scripts/pr-merge-cleanup.py` | 旧清理入口；交互式使用 `cleanup_merged_pr_local_branch` |
-| `scripts/rewrite_weather_commit_subjects.py` | 旧标题映射；交互式使用纯文本工具 `rewrite_legacy_commit_message`，该工具不改写历史 |
+| `scripts/rewrite_weather_commit_subjects.py` | 旧标题映射兼容脚本；当前 MCP 服务不提供对应的交互式工具 |
 
-Hook 接入规则见 [`hooks.md`](hooks.md)。历史重写没有 MCP 执行工具，见 [`rewrite-weather-commit-subjects.md`](rewrite-weather-commit-subjects.md)。
+Hook 接入规则见 [`hooks.md`](hooks.md)。历史标题维护边界见 [`rewrite-weather-commit-subjects.md`](rewrite-weather-commit-subjects.md)。

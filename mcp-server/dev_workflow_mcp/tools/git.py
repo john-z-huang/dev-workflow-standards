@@ -15,7 +15,6 @@ def register_git_tools(server: MCPServer) -> None:
         (validation.check_branch_names, read_only),
         (validation.check_commit_message, read_only),
         (validation.check_staged_changes, read_only),
-        (validation.rewrite_legacy_commit_message, read_only),
         (workflows.stage_repository_paths, local_write),
         (workflows.commit_repository_changes, destructive_write),
     )

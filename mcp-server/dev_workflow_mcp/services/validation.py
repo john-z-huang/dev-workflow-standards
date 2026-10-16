@@ -12,7 +12,7 @@ from ..infrastructure.github_cli import _gh_api_json, _gh_pr_for_cleanup, _resol
 from ..infrastructure.git import _require_clean_worktree
 from ..infrastructure.paths import _run_repo, _validated_repo_path
 from ..infrastructure.process import _run_fixed
-from ..policy import ATTRIBUTION_PATTERN, CHINESE_PATTERN, LEGACY_SUBJECTS, OID_PATTERN, PREFIXED_SUBJECT, SUBJECT_PATTERN, branch_errors as _branch_errors
+from ..policy import ATTRIBUTION_PATTERN, CHINESE_PATTERN, OID_PATTERN, SUBJECT_PATTERN, branch_errors as _branch_errors
 
 
 
@@ -214,25 +214,3 @@ def cleanup_merged_pr_local_branch(
         return {"completed": False, "actions": actions, "error": "核验后强制删除本地分支失败"}
     actions.append(f"deleted local branch {target_branch} with -D after exact OID verification")
     return {"completed": True, "repo": repo, "pr_number": pr_number, "actions": actions}
-
-
-def rewrite_legacy_commit_message(message: str) -> dict[str, str]:
-    """将已配置的旧天气项目提交标题映射为规范标题，供独立授权的 Git 历史过滤使用。
-
-    只转换输入文本，不调用 Git、不改写提交历史。未知标题返回错误；GitHub 自动合并
-    标题和已有规范标题保持原样，正文与换行保留。
-    """
-    lines = message.splitlines(keepends=True)
-    for index, line in enumerate(lines):
-        subject = line.rstrip("\r\n")
-        if not subject.strip() or subject.lstrip().startswith("#"):
-            continue
-        normalized = subject.strip()
-        if normalized.startswith("Merge pull request") or PREFIXED_SUBJECT.fullmatch(normalized):
-            return {"rewritten_message": message, "changed": "false"}
-        replacement = LEGACY_SUBJECTS.get(normalized)
-        if replacement is None:
-            return {"rewritten_message": "", "changed": "false", "error": f"未配置提交标题映射: {subject!r}"}
-        lines[index] = replacement + line[len(subject):]
-        return {"rewritten_message": "".join(lines), "changed": "true"}
-    return {"rewritten_message": "", "changed": "false", "error": "提交信息没有可用标题"}\n
