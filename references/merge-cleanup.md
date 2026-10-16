@@ -1,6 +1,6 @@
 # PR 合并后的本地分支清理
 
-清理只针对已合并 PR 的本地 head 分支；不删除远端分支。同步 base 和删除分支都是本地写操作，必须先有用户对此操作的明确授权，再调用 `cleanup_merged_pr_local_branch(repo_path, pr_number, repo?, branch_name?, merged_head_oid?)`。PR 已合并本身不构成清理授权。
+清理只针对已合并 PR 的本地 head 分支；不删除远端分支。同步 base 和删除分支都是本地写操作，必须先有用户对此操作的明确授权，再调用 MCP 工具 `cleanup_merged_pr_local_branch`。必填输入为 `repo_path`、`pr_number`，可选输入为 `repo`、`branch_name` 和 `merged_head_oid`。PR 已合并本身不构成清理授权。
 
 工具先确认工作区干净、PR 状态为 `MERGED`，然后切换到 PR 的实际 base 并执行 fast-forward 同步，再尝试普通分支删除。它不会假定 base 是 `main`，也不会删除 worktree 或远端分支。
 

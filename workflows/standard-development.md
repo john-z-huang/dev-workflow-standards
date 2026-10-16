@@ -53,5 +53,5 @@
 - `check_commit_message` 检查完整提交信息；标题格式为 `<type>: 中文说明`，type 为 `feat/fix/docs/refactor/test/chore/perf/build/ci`；
 - 只包含本任务的完整文件，无令牌、用户改动或无关内容。MCP 暂存工具按整文件工作；若同一文件含有需保留的无关 hunk，停止并报告工具不支持部分暂存；
 - `check_staged_changes` 和适用项目检查通过；
-- 调用 `stage_repository_paths(repo_path, paths)` 后，再用 `commit_repository_changes(repo_path, message, expected_paths)` 完成提交；工具不可用时停在本地结果，不手写 Git 命令绕过；
+- 调用 MCP 工具 `stage_repository_paths` 并传入 `repo_path`、`paths`，再调用 `commit_repository_changes` 并传入 `repo_path`、`message`、`expected_paths` 完成提交；工具不可用时停在本地结果，不手写 Git 命令绕过；
 - 需要 GitHub 交付时进入 [`github-delivery.md`](github-delivery.md)。

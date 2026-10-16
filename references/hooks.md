@@ -1,6 +1,6 @@
 # 版本化校验脚本与 Git Hook
 
-Skill 不会自动把 `.githooks` 文件或脚本复制到目标项目。`configure_project_hooks_path(repo_path)` 只在目标仓库已有 `.githooks/pre-commit` 和 `.githooks/commit-msg`，且现有配置未指向其他路径时，设置该仓库本地的 `core.hooksPath`；它不会复制或安装 Hook 资产。
+Skill 不会自动把 `.githooks` 文件或脚本复制到目标项目。获得用户授权后，调用 MCP 工具 `configure_project_hooks_path` 并传入 `repo_path`；它只在目标仓库已有 `.githooks/pre-commit` 和 `.githooks/commit-msg`，且现有配置未指向其他路径时，设置该仓库本地的 `core.hooksPath`，不会复制或安装 Hook 资产。
 
 如目标项目尚无这些文件，当前 MCP 服务不提供资产复制工具。不要通过 Skill 内的通用终端流程代做；说明缺少能力，由用户决定如何提供项目 Hook 文件。配置工具会拒绝覆盖指向其他路径的现有设置。
 
