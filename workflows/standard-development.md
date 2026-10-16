@@ -1,70 +1,57 @@
 # 普通开发工作流
 
-适用：默认直接在当前工作区开发，无论仓库是否有 remote、是否需要 GitHub 交付或是否需要分支。只有用户在指令中明确要求使用或创建 worktree 时，才改读 [`worktree-development.md`](worktree-development.md)。
+适用：默认直接在当前工作区开发，无论仓库是否有 remote、是否需要 GitHub 交付或是否需要分支。只有用户在指令中明确要求 worktree 时，才改读 [`worktree-development.md`](worktree-development.md)。固定 Git/GitHub 操作使用 [`mcp-tools.md`](../references/mcp-tools.md) 中的专用工具。
 
 ## 队列
 
 | 步骤 | 完成后 |
 |---|---|
-| 明确需求 | 范围 |
-| 确认范围 | 代码理解或跳过理由 |
-| 代码理解 | 实现 |
-| 实现 | 验证 |
-| 验证 | 提交门禁 |
+| 明确需求 | 范围与授权清楚 |
+| 确认范围 | 用户改动和任务边界已识别 |
+| 代码理解 | 影响范围已掌握，或记录跳过理由 |
+| 实现 | 仅包含批准的改动 |
+| 验证 | 适用检查已完成或标记 |
 | 提交门禁 | 完成或停在本地结果 |
 
 ## 1. 明确需求
 
 - 明确目标、输入、输出、不可改变项和验收标准。
-- 确认是否需要 remote、GitHub、Hook、自动化或历史重写；只有用户明确要求 worktree 时才改读 worktree 工作流。存在 remote 本身不改变默认的当前工作区模式。
-- 如果当前任务涉及 GitHub 仓库或 Fork，先按 [`fork-maintenance.md`](../references/fork-maintenance.md) 的判定门禁检查 `parent`；只有确认仓库确实是 Fork，才启用 `origin`/`upstream`、同步用 `main` 和个人维护分支规则。
+- 确认是否需要 remote、GitHub、Hook、自动化或历史重写；remote 本身不改变默认工作区模式。
+- 对 GitHub 仓库调用 `audit_repository_state` 检查仓库身份、remote、默认分支和 Fork parent；只有确认 `parent` 非空才启用 [`fork-maintenance.md`](../references/fork-maintenance.md)。
 - 未获授权的提交、推送、外部消息、合并、删除和历史重写保持禁止。
-- 只读取当前步骤所需的 `references/`。
 
 ## 2. 确认范围
 
-- 先看当前目录和现有差异；保留用户改动。
-- 区分本任务、已有改动、未跟踪文件和无关内容。
-- 记录允许修改的文件/hunk；不覆盖、删除、移动或静默恢复不属于本任务的内容。
-- 本地开发环境中，若当前 Session 暴露 Serena MCP 且目标项目路径可访问，以该仓库或 worktree 的准确根目录激活 Serena 项目；若尚未 onboarding，运行 onboarding，并按 [`code-understanding.md`](../references/code-understanding.md) 启用项目 Memory。
+- 调用 `audit_repository_state`，传入目标仓库绝对 `repo_path`，检查分支、工作区和 remote；保留已有改动。
+- 区分本任务、已有改动、未跟踪文件和无关内容；记录允许修改的文件/hunk，不覆盖、删除、移动或静默恢复其他内容。
+- 本地代码任务按 [`code-understanding.md`](../references/code-understanding.md) 在目标仓库准确根目录激活 Serena；Memory 只保留可复用的项目说明。
 - 提交边界必须是可独立审查、验证和回滚的逻辑单元。
 
 ## 3. 代码理解
 
-- 任务需要理解源代码逻辑时，按 [`code-understanding.md`](../references/code-understanding.md) 在本地环境优先使用 Serena MCP。
-- 用 Serena Memory 保存可复用的项目说明，以及用户要求跨会话延续时的精简交接上下文；Memory 不能取代规范文档或当前 Session 的任务状态。
-- 先形成相关文件、符号、引用关系和影响范围的最小理解，再开始实现。
-- 纯文档、机械修改或 Serena 不可用时，按参考文档选择普通文件工具，并记录跳过或降级原因。
+- 任务需要理解源代码逻辑时优先使用 Serena 的符号、引用、实现和调用链能力。
+- 先形成相关文件和影响范围的最小理解，再开始实现。
+- 纯文档、机械修改或 Serena 不可用时记录降级原因；证据不足以判断影响范围时停止并报告。
 
-## Fork 仓库的默认分支边界（仅对已确认的 Fork 生效）
+## Fork 仓库边界
 
-- 使用 `gh repo view --json parent,defaultBranchRef` 判断仓库类型：`parent` 非空才是 Fork；`parent` 为空表示独立仓库，跳过本节，不创建个人维护分支，也不增加双分支保护要求。
-- Fork 的 `main` 只用于镜像上游默认分支：先同步 `upstream/main`，再以 fast-forward 方式更新 `origin/main`。
-- 个人改动必须从个人维护分支或其需求分支进入；不得直接在 `main` 上提交、开发或推送。
-- 需求分支的 PR 默认以个人维护分支为 base，而不是以 `main` 为 base；将 `main` 更新带入个人维护分支时，也必须经过该分支的 PR 保护规则。
-- `main` 和个人维护分支都应通过 GitHub Ruleset/Branch protection 长期保护；至少禁止删除和强制推送，个人维护分支还应要求通过 PR。
+仅对已确认 Fork 生效。`main` 只镜像上游默认分支；个人改动必须从个人维护分支或其需求分支进入。需求 PR 默认以个人维护分支为 base。`main` 和个人维护分支的保护规则应符合 [`fork-maintenance.md`](../references/fork-maintenance.md)；规则不适用时不得修改独立仓库现有拓扑。
 
-## 4. 实现
+## 4. 实现与验证
 
-- 只实现已批准范围；新的业务/架构决定先停下请求决定。
+- 只实现已批准范围；新的业务或架构决定先停下请求决定。
 - 文档和提交使用中文；不添加 Agent 署名或生成声明。
-- 自动化使用可移植 Shell/Python 和标准 Git Hook，不依赖专有 Hook。
-- 新增行为/修复补充有意义的测试；纯文档/机械修改不强制新增测试。
-
-## 5. 验证
-
-- 文档：检查 Markdown、链接和引用路径。
-- 行为：运行相关测试，并按风险运行构建、lint、类型、集成或回归检查。
-- 脚本/Hook：覆盖成功、失败、参数错误、退出码和副作用范围。
+- 自动化使用可移植 Shell/Python 和标准 Git Hook，不依赖专有 Hook。MCP 不接收任意脚本或测试命令。
+- 按用户要求或项目明确要求运行适用验证；不把未运行的检查写成通过。项目自定义测试由项目配置决定，不传入 MCP 工具。
 - 失败时改读 [`recovery-and-exceptions.md`](recovery-and-exceptions.md)；未运行不得标为通过。
 
-## 6. 提交门禁
+## 5. 提交门禁
 
-只有用户授权提交且以下均通过才提交：
+只有用户授权暂存和提交且以下条件满足时继续：
 
-- 分支符合 [`check-branch-name.md`](../references/check-branch-name.md)；
-- 提交信息符合 [`check-commit-message.md`](../references/check-commit-message.md)；
-- 标题符合 `<type>: 中文说明`，type 为 `feat/fix/docs/refactor/test/chore/perf/build/ci`；
-- 只暂存本任务文件/hunk，无令牌、用户改动或无关内容；
-- `git diff --cached --check` 和适用测试通过；
-- 相关 GitHub 交付已按索引进入 GitHub 工作流；未授权则停在本地结果。
+- `check_branch_names` 检查分支合规；
+- `check_commit_message` 检查完整提交信息；标题格式为 `<type>: 中文说明`，type 为 `feat/fix/docs/refactor/test/chore/perf/build/ci`；
+- 只包含本任务的完整文件，无令牌、用户改动或无关内容。MCP 暂存工具按整文件工作；若同一文件含有需保留的无关 hunk，停止并报告工具不支持部分暂存；
+- `check_staged_changes` 和适用项目检查通过；
+- 调用 `stage_repository_paths(repo_path, paths)` 后，再用 `commit_repository_changes(repo_path, message, expected_paths)` 完成提交；工具不可用时停在本地结果，不手写 Git 命令绕过；
+- 需要 GitHub 交付时进入 [`github-delivery.md`](github-delivery.md)。

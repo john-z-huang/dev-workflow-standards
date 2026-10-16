@@ -1,16 +1,9 @@
-### 版本化校验脚本与 Hook
+# 版本化校验脚本与 Git Hook
 
-本 Skill 中的 Git 校验脚本和 `.githooks` 文件只是可复用资源，不会因为 Skill 被加载
-就自动注入或启用到目标项目。要让校验在目标项目的 `git commit` 流程中生效，必须将
-相关脚本复制到目标项目的 `scripts/` 目录，将 `commit-msg` 和 `pre-commit` wrapper
-复制到目标项目的 `.githooks/` 目录，并在目标项目中执行：
+Skill 不会自动把 `.githooks` 文件或脚本复制到目标项目。`configure_project_hooks_path(repo_path)` 只在目标仓库已有 `.githooks/pre-commit` 和 `.githooks/commit-msg`，且现有配置未指向其他路径时，设置该仓库本地的 `core.hooksPath`；它不会复制或安装 Hook 资产。
 
-```bash
-git config core.hooksPath .githooks
-```
+如目标项目尚无这些文件，当前 MCP 服务不提供资产复制工具。不要通过 Skill 内的通用终端流程代做；说明缺少能力，由用户决定如何提供项目 Hook 文件。配置工具会拒绝覆盖指向其他路径的现有设置。
 
-推荐将复制后的脚本和 Hook 纳入目标项目版本控制；Hook 中应通过目标项目自己的
-`scripts/` 路径调用脚本，不要依赖开发者机器上的 Skill 绝对路径。新克隆项目或新
-开发者首次使用时，需要重新执行上述 `git config`（该配置保存在本地 Git 配置中，
-不会随提交自动共享）。`git commit --no-verify` 可以绕过本地 Hook；若必须强制执行，
-还需要在代码托管平台配置服务端检查。
+Hook 脚本应通过目标项目内的相对路径调用版本化校验脚本，不依赖开发者机器上的 Skill 绝对路径。提交到 Git 的 Hook 可以随仓库共享；`core.hooksPath` 配置保存在本地 Git 配置中，新克隆或新开发者需要再次配置。`git commit --no-verify` 可以绕过本地 Hook；如需强制执行，还需仓库托管平台上的服务端检查。
+
+交互式流程可直接调用 `check_branch_names`、`check_commit_message` 和 `check_staged_changes`。Hook 中可保留脚本作为轻量本地校验入口。

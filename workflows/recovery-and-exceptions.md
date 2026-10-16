@@ -28,7 +28,7 @@ NEED=<输入/授权/网络/认证/决定>  PRESERVED=<现场>
 - dirty tracked：停止切换、pull、worktree 创建，保留现场。
 - 未跟踪文件会被覆盖：停止，不用 clean/reset/stash/删除/改名/移动消除冲突。
 - 目标路径已被主分支提供：不覆盖。
-- PR base/head/Issue 错误：停止推送/合并，先读取实际状态；共享分支错误用 `git revert`，不擅自改写历史。
+- PR base/head/Issue 错误：停止推送/合并，使用已知编号和预期关系调用 `audit_issue_pr_policy`；当前没有 revert 或修改 PR base 的工具，保留现场并报告。
 - Git 冲突需要新业务/架构决定：停止；只有已批准内容的机械冲突可解决。
 - Serena 未暴露、项目激活失败或语言服务器异常时，按 [`code-understanding.md`](../references/code-understanding.md) 降级到普通文件工具；若缺少调用链、类型关系或影响范围证据，停止并报告具体影响。
 

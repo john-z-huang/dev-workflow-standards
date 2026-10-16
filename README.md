@@ -1,149 +1,37 @@
 # dev-workflow-standards
 
-通用开发工作流规范 Skill，适用于各类 Code Agent 环境。为任何需要严格开发纪律的项目提供标准化的 Git 工作流、提交规范和 GitHub 协作流程。
+此项目将开发规范拆为两层：Skill 文档保留场景分析、顺序、授权与验收；本地 Python MCP 服务执行固定 Git/GitHub 操作。MCP 使用官方 Python SDK v2 与 stdio transport，项目依赖由 `uv` 管理。
 
-## 功能概览
+## Codex 中安装
 
-本 Skill 涵盖以下核心规范：
+在本仓库根目录执行：
 
-- **Git 分支命名规范** — ASCII 字符、小写英文、类别前缀（`feat/`、`fix/`、`docs/`、`refactor/`、`agent/` 等）
-- **可选 Worktree 隔离** — 默认直接在当前工作区开发；仅用户明确要求时创建 worktree，并按门禁执行同步、未跟踪文件处理和串行交付
-- **Fork 分支维护（条件启用）** — 仅当 GitHub 仓库存在 `parent`、确认是 Fork 时，才让 `main` 镜像 `upstream`，并把个人长期改动放入 `personal-<project>`（或 `personal/<project>`）
-- **双分支保护（条件启用）** — 仅对 Fork 通过 GitHub Ruleset/Branch protection 保护 `main` 与个人维护分支；独立开发仓库不受该规则影响
-- **Commit 前分支名检查** — 通过标准 Git `pre-commit` hook 和正则表达式检查分支格式并拦截特定产品名称
-- **Commit message 检查** — 通过标准 Git `commit-msg` hook 检查 `<type>: 中文说明` 标题格式、中文说明和禁止署名声明
-- **暂存区检查** — 通过标准 Git `pre-commit` hook 检查空白错误，并可运行项目测试
-- **Issue/PR 策略审计** — 通过 `gh` REST API 只读检查状态、关联关系和 base/head
-- **Issue/PR 描述文件** — 创建 Issue/PR 前先生成 Markdown 描述文件，再通过 `gh ... --body-file` 传入，避免命令行内联 Markdown 解析错误
-- **提交规范** — 以可独立验证的功能模块为提交边界，提交信息使用中文，测试通过后方可提交
-- **提交署名约束** — 禁止在提交信息、PR 描述等位置声明 Code Agent 署名（如 `Generated with`、`Co-Authored-By`）
-- **GitHub 操作流程** — 所有 GitHub 操作通过 `gh` CLI 执行，禁止浏览器操作
-- **Issue 与 PR 流程** — 功能/修复须关联 Issue；用户要求推送到 GitHub 且没有相关 Issue 时自动创建 Issue，再创建并关联 PR；创建时优先读取仓库已有 labels、附加至少一个工作类型分类标签并默认指派给当前已认证的本人账号；若已授权集成层无法枚举 labels，但支持创建时写入与创建后回读，则可使用受限的默认类别候选并以实际写入结果验证，不因缺少枚举接口本身阻塞；PR 创建时同样默认自指派并保持开放，不自动关闭或合并
-- **PR 合并后清理** — 标准化分支清理与 main 同步流程
-- **网络与认证排查** — `GH_TOKEN` 安全处理、代理环境下的认证排查顺序
-- **禁止独占功能** — 禁用特定 Code Agent 的 Hooks 等专有功能，统一使用可移植的 Shell/Python 脚本实现自动化
-- **自动化案例** — 提供 PR 合并后清理等可移植 Python 脚本，附完整文档与集成说明
-- **本地代码理解** — 在 Serena MCP 可用时优先使用符号、引用和语言服务能力分析源代码，并为不适用或不可用场景定义安全降级
+```bash
+uv tool install --editable ./mcp-server
+codex mcp add \
+  -c 'mcp_servers.dev-workflow-standards-mcp.default_tools_approval_mode="writes"' \
+  dev-workflow-standards-mcp -- "$(uv tool dir --bin)/dev-workflow-mcp"
+codex mcp list
+```
 
-## 安装与使用
+`writes` 会要求 Codex 确认未标记为只读的工具。Skill 的用户授权规则仍然适用；MCP 注解和 Codex 确认都不能替代任务语境中的授权。CLI 写入的 MCP 配置由 Codex 桌面端、CLI 和 IDE 共享；若当前桌面会话尚未加载新服务，重启或新开会话后使用。
 
-### 作为 Code Agent Skill 使用
+editable uv tool 指向本地 `mcp-server/` 源码；移动或归档其所在 worktree 前，应先将工具重新安装到稳定路径。
 
-本 Skill 通常位于 `~/.agents/skills/dev-workflow-standards/`，由 Code Agent 自动加载。项目的 `AGENTS.md` 或 `CLAUDE.md` 可引用本 Skill 并补充项目特有约定。
+本次开发保留在独立 worktree 中。已注册的 MCP server 指向该 worktree；`~/.agents/skills/dev-workflow-standards` 下的活动 Skill 文档要等本分支集成后才会切换到此版本。集成前不要归档该 worktree。
 
-Skill 被加载并不等于目标项目已经启用 Git 校验。使用本 Skill 的项目必须将需要的
-`scripts/check-*.py` 和 `.githooks/` wrapper 复制到自己的仓库并提交，然后在该仓库
-执行 `git config core.hooksPath .githooks`。Hook 只能调用目标项目内的脚本，不应依赖
-开发者机器上的 Skill 路径。
+## 使用
 
-### 快速检查清单
+使用 [`SKILL.md`](SKILL.md) 时按 [`workflows/index.md`](workflows/index.md) 选择工作流，再按 [`references/mcp-tools.md`](references/mcp-tools.md) 调用对应工具。所有仓库操作都要传入本次目标项目的绝对 `repo_path`；服务器不会把启动时的目录当作目标仓库。
 
-详细的顺序执行队列和状态记录模板请先参阅 [`workflows/index.md`](./workflows/index.md) 及对应工作流文档；具体规则仍以 [SKILL.md](./SKILL.md) 和 `references/` 为准。
+Git/GitHub 写操作必须先满足工作流中的用户授权和安全前置条件。服务只接受固定领域参数，不提供任意 shell、git、gh 或项目测试命令。工具未覆盖的操作要停止并报告，不要改用手写命令绕过。
 
 ## 项目结构
 
-```
-dev-workflow-standards/
-├── SKILL.md                    # Skill 元数据与入口导航
-├── README.md                   # 本文件
-├── workflows/                  # 场景导航和顺序队列
-│   ├── index.md                # 入口、场景选择和完成门禁
-│   ├── standard-development.md # 默认在当前工作区执行的普通任务
-│   ├── worktree-development.md # 明确要求时的 worktree 开发与串行交付
-│   ├── github-delivery.md      # Issue/PR、认证、标签和 Squash Merge
-│   ├── verification-and-cleanup.md # 验证、Hook 检查和合并后处理
-│   ├── special-operations.md   # Hook、自动化和历史标题重写
-│   └── recovery-and-exceptions.md # 阻塞、冲突和安全停止
-├── .githooks/
-│   ├── commit-msg              # 调用提交信息检查器
-│   └── pre-commit              # 调用分支名和暂存区检查器
-├── scripts/
-│   ├── check-branch-name.py     # Commit 前分支名检查脚本
-│   ├── check-commit-message.py   # Commit message 检查脚本
-│   ├── check-pr-policy.py        # Issue/PR 策略审计脚本
-│   ├── check-staged-changes.py   # 暂存区检查脚本
-│   ├── rewrite_weather_commit_subjects.py # 历史提交标题重写脚本
-│   └── pr-merge-cleanup.py       # PR 合并后清理脚本
-├── references/
-│   ├── fork-maintenance.md     # Fork 上游同步、个人分支和 GitHub 保护规则
-│   ├── code-understanding.md  # 本地代码理解与 Serena 优先规则
-│   ├── check-branch-name.md     # Commit 前分支名检查使用说明
-│   ├── check-commit-message.md   # Commit message 检查使用说明
-│   ├── check-pr-policy.md        # Issue/PR 审计使用说明
-│   ├── check-staged-changes.md   # 暂存区检查使用说明
-│   ├── rewrite-weather-commit-subjects.md # 历史提交标题重写说明
-│   └── pr-merge-cleanup.md     # PR 合并后清理脚本使用说明
-├── tests/
-│   ├── test_check_branch_name.py # 分支名检查测试
-│   ├── test_check_commit_message.py # Commit message 测试
-│   ├── test_check_pr_policy.py  # Issue/PR 审计测试
-│   ├── test_check_staged_changes.py # 暂存区检查测试
-│   ├── test_git_hooks.py        # git commit hook 集成测试
-│   └── test_pr_merge_cleanup.py # 合并后清理测试
-└── .gitignore
-```
+- `SKILL.md`：短入口、共用边界和加载顺序。
+- `workflows/`：保留场景判断、先后依赖、授权和完成条件。
+- `references/`：按需加载的决策细节和 MCP 工具名/参数映射。
+- `mcp-server/`：Python/uv 项目、MCP v2 stdio 服务和固定操作工具。
+- `scripts/`、`.githooks/`：供标准 Git Hook 集成使用的可移植校验资产。
 
-## 自动化脚本
-
-本 Skill 提供独立的、可移植的自动化脚本，遵循「清晰文档 + 通用脚本」模式。各脚本的完整使用说明存放于 `references/` 目录：
-
-- **`scripts/pr-merge-cleanup.py`** — PR 合并后自动清理：确认合并状态、同步 main、删除本地特性分支。用法：`python3 scripts/pr-merge-cleanup.py <PR编号>`（详见 [`references/pr-merge-cleanup.md`](./references/pr-merge-cleanup.md)）
-
-### Commit 前分支名检查
-
-- **`scripts/check-branch-name.py`** — 使用不区分大小写的正则表达式拦截特定产品名称。启用 hook：`git config core.hooksPath .githooks`；详见 [`references/check-branch-name.md`](./references/check-branch-name.md)。
-- **`scripts/check-commit-message.py`** — 在 `commit-msg` 阶段检查 `<type>: 中文说明` 标题格式、中文说明和禁止署名声明；详见 [`references/check-commit-message.md`](./references/check-commit-message.md)。
-- **`scripts/check-staged-changes.py`** — 在 `pre-commit` 阶段检查暂存区空白错误，可选运行测试；详见 [`references/check-staged-changes.md`](./references/check-staged-changes.md)。
-- **`scripts/rewrite_weather_commit_subjects.py`** — 按精确映射重写历史提交标题，过滤 GitHub 自动生成的 `Merge pull request` 提交；该操作会改变 commit SHA，详见 [`references/rewrite-weather-commit-subjects.md`](./references/rewrite-weather-commit-subjects.md)。
-- **`scripts/check-pr-policy.py`** — 只读检查 Issue/PR 状态、关联关系和 base/head；详见 [`references/check-pr-policy.md`](./references/check-pr-policy.md)。
-
-## 规范要点速览
-
-### 分支命名
-
-```
-agent/docs-branch-naming   ✅ 合规
-personal-serena            ✅ Fork 的个人长期维护分支
-personal/my-project        ✅ Fork 的层级个人维护分支
-fix/batch-result-validation ✅ 合规
-feat/async-batch-submit    ✅ 合规
-agent/更新-git-规则         ❌ 含非 ASCII 字符
-main                       ✅ 受保护根分支
-feature/add-validation     ❌ 类别前缀不在允许列表
-feat/codex-integration      ❌ 含禁止的产品名称
-fix/CURSOR-timeout          ❌ 含禁止的产品名称（大小写不敏感）
-```
-
-### 提交信息
-
-```
-feat: 添加批量请求校验                    ✅ 中文、单一模块
-增加批量请求校验                         ❌ 缺少类型前缀
-feat: 批量处理、文档优化与代码清理         ❌ 混入多个不相关变更
-```
-
-### PR 合并后流程
-
-```bash
-gh pr view <PR编号> --json state,mergedAt,baseRefName,headRefName  # 确认已合并
-git switch main                                                 # 切换到 main
-git branch -d <分支名称>                     # 删除本地分支
-```
-
-普通仓库在清理前使用 `git pull --ff-only origin main`；个人 Fork 按上游同步流程更新 `main`，不要把个人维护分支或需求分支的提交推送到 `main`。
-
-### Fork 维护流程
-
-```bash
-git fetch upstream main
-git switch main
-git merge --ff-only upstream/main
-git push origin main
-git switch personal-<project>
-```
-
-需求分支从个人维护分支创建，PR 的 base 也指向个人维护分支；不要把个人改动直接推送到 `main`。完整步骤见 [`references/fork-maintenance.md`](./references/fork-maintenance.md)。
-
-## 许可
-
-本项目为内部开发规范，供团队内部使用。
+MCP 服务实现与调用约束见 [`mcp-server/pyproject.toml`](mcp-server/pyproject.toml) 和 [`references/mcp-tools.md`](references/mcp-tools.md)。

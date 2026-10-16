@@ -1,41 +1,7 @@
-# 历史提交标题重写
+# 历史提交标题重写能力边界
 
-## 功能描述
+本 Skill 的 MCP 工具不执行 Git 历史改写。`rewrite_legacy_commit_message(message)` 只把单条旧标题文本按映射转换并返回结果；它不会读取提交、调用 Git、批量验证提交范围或修改历史。
 
-`scripts/rewrite_weather_commit_subjects.py` 是一次性 Git 历史维护工具。它作为
-`git filter-branch --msg-filter` 的消息过滤器运行，将预先配置的旧提交标题映射为
-`<type>: 中文说明` 格式。
+历史重写会改变提交 SHA，且可能影响共享分支。本 Skill MCP 服务没有 `filter-branch`、rebase 或批量改写工具。遇到历史改写请求时，先记录风险与目标范围，说明当前没有专用执行能力；不要通过通用命令或直接运行脚本绕过工具边界。
 
-脚本只处理标准输入中的提交信息：替换第一行有效标题，保留提交正文和原始换行；
-以 `Merge pull request` 开头的 GitHub 自动生成合并提交会从重命名流程中过滤掉并原样
-输出，不参与标题映射；未知标题立即失败；已经符合允许前缀的标题原样输出，支持重复执行。
-
-## 使用前提
-
-- 必须得到明确的历史改写授权；
-- 先核对当前分支、所有分支/标签、远端协作状态和备份方案；
-- 不要直接在共享远端分支上运行；历史改写会改变提交 SHA；
-- 先用脚本对目标范围内的每条提交信息做预检查，再执行重写。
-
-## 使用示例
-
-在目标项目根目录执行：
-
-```bash
-FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch -f \\
-  --msg-filter 'python3 scripts/rewrite_weather_commit_subjects.py' \\
-  -- main
-```
-
-重写后检查提交数量、标题、提交树和远端差异；确认无误后再按团队流程处理旧引用
-和远端分支。不要为了清理对象而自动执行不可逆的垃圾回收。
-
-## 退出行为
-
-| 情况 | 行为 |
-|------|------|
-| 标题存在精确映射 | 替换标题并输出完整提交信息 |
-| 标题以 `Merge pull request` 开头 | 过滤出 GitHub 自动生成的合并提交，原样输出 |
-| 标题已经带允许前缀 | 原样输出 |
-| 标题没有映射且不符合前缀格式 | 退出失败，防止静默改写 |
-| 没有有效标题 | 退出失败 |
+仓库中的 `scripts/rewrite_weather_commit_subjects.py` 是原有兼容资产，不由 Skill 的 MCP 工具调用。它保留旧标题映射、合并提交过滤和未知标题失败等纯文本转换逻辑；如需查看转换结果，优先使用 `rewrite_legacy_commit_message`。
