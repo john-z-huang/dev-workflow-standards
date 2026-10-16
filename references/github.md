@@ -1,57 +1,34 @@
-### GitHub 操作规范
+# GitHub 操作策略
 
-- 涉及 GitHub（包括 Issue、Pull Request、Actions、仓库信息或评论）前，若有适用且可用的 GitHub Skill，先查阅其相关建议；没有时按本文和实际工具 schema 执行，不因缺失 Skill 阻塞。
-- GitHub 操作优先通过 GitHub CLI（`gh`）执行。若开发环境是云端容器且未安装 `gh` CLI，可改用当前 Code Agent 已授权的 GitHub Connector 或 GitHub App 集成层执行等效操作；不得因为缺少 `gh` CLI 而改用浏览器或浏览器自动化工具。
-- 使用 GitHub Connector 或 GitHub App 集成层时，必须确认该集成已获得目标仓库及当前操作所需的授权，并遵循其工具接口的参数、确认和返回值约定；不得要求用户在对话中粘贴访问令牌，也不得自行猜测或伪造授权信息。
-- 无论使用 `gh` CLI 还是已授权集成层，都必须显式核对仓库、Issue、PR、base/head 分支及操作结果；集成层应提供与下述 `gh` 示例等价的查询、创建、更新、评论、合并和核验能力。
-- 用户明确要求将改动推送到 GitHub 时，该请求同时授权为本次交付自动创建缺失的相关 Issue 和关联 PR；不再主动询问是否创建 Issue 或 PR。创建 PR 后保持其开放状态，本 Skill 不自动关闭或合并 PR。
+固定 GitHub CLI 操作使用 [`mcp-tools.md`](mcp-tools.md) 中的专用 MCP 工具，或当前已授权的 GitHub Connector/App。禁止浏览器和浏览器自动化。服务器调用本机 `gh` 身份，不收集、不输出令牌。
 
-  **正确做法**：先将完整 Issue 正文生成到本地 Markdown 文件，再使用 `gh issue create --title "..." --body-file <issue-body-file> --label "enhancement" --assignee "@me"`；先将完整 PR 正文生成到本地 Markdown 文件，再使用 `gh pr create --title "..." --body-file <pr-body-file> --assignee "@me"`。不得在 `gh issue create` 或 `gh pr create` 的 `--body` 参数、命令替换、here-document 或其他命令行内联参数中直接传入 Markdown 正文。调用已授权 GitHub Connector / GitHub App 时，使用其等效正文参数，并通过 `labels`、`assignees` 参数附加分类标签和本人责任人。
+## 授权、网络与身份
 
-  **错误做法**：在浏览器中打开 `github.com` 手动创建 Issue/PR、使用 Playwright/Selenium 等浏览器自动化工具操作 GitHub 页面。
+- 每次外部写操作都需要用户授权。Skill 加载、Codex 工具可用或工具注解均不自动授权。
+- GitHub 网络/认证问题按恢复流程处理；不得因代理/API 不通直接判定登录凭据失效，也不得要求用户粘贴 token。
+- `GH_TOKEN` 与其他凭据不得打印、回显、插值、记录或写入文件/参数/错误报告。出错时只保留非敏感摘要。
+- 目标仓库、Issue/PR 编号、assignee 和 base/head 必须来自当前任务或工具返回值，不猜测账号/权限。
 
-- 执行 `gh` 命令时，必须使用能够进行受限网络访问的沙箱环境，不得在完全禁止网络访问的沙箱中运行 `gh`。`gh` 需要与 GitHub API 通信，完全断网的沙箱会导致命令不可用，应使用允许出站 HTTPS 请求但施加其他合理限制的沙箱配置。已授权 GitHub Connector / GitHub App 集成层的网络访问由集成运行环境负责，但调用仍必须通过其正式接口完成。
+## Issue
 
-### 网络与认证
+任何待推送功能或修复必须有关联的开放 Issue。用户明确要求推送时，若没有相关 Issue，可以按该用户指令直接补建，不再另问。
 
-- 在受限或配置代理的网络环境中使用 `gh` 前，先确认请求将通过可访问的 HTTP Proxy；不得因代理或 GitHub API 不可达而直接判定 `GH_TOKEN` 或本地登录凭据失效。使用已授权 GitHub Connector / GitHub App 集成层时，遵循其连接状态和授权检查，不将 CLI 的代理或 `GH_TOKEN` 排查要求强加于集成层。
+1. 用 `audit_repository_state` 确认目标仓库与 GitHub 身份；用 `list_github_issue_labels` 读取仓库现有标签。
+2. 按 Issue 的主要目的选择至少一个已有工作类型 label；辅助标签不能替代工作类型 label。不得把未核验的 GitHub 默认标签说成仓库已有标签。
+3. 正文说明需求/缺陷、影响、预期行为和验收标准，必要时补充复现、约束或依赖。
+4. 获得创建授权后调用 `create_github_issue`。工具只接受已存在的 label，默认指派当前账号并回读状态/labels/assignee；校验失败时停止推送。
 
-  **使用 `gh` CLI 时的认证排查顺序**：
-  1. 先检查代理与 GitHub API 连通性（如 `gh api /zen 2>&1` 或 `curl -I https://api.github.com`）。
-  2. 确认网络连通后，再检查 `GH_TOKEN` 是否已设置和凭据是否有效。
+## 推送与 PR
 
-- 使用 `gh` CLI 时，确认网络连通后若仍需重新认证：先确认环境变量 `GH_TOKEN` 已设置，再仅通过标准输入将其传递给 `gh auth login --with-token` 完成认证；`GH_TOKEN` 未设置时应报告认证阻塞，不得猜测、伪造或要求用户在对话中粘贴令牌。
-- 若云端容器没有 `gh` CLI 且使用已授权 GitHub Connector / GitHub App 集成层：仅使用当前已建立的授权连接；若集成未连接、授权不足或无法访问目标仓库，应报告认证或权限阻塞，不得要求用户粘贴令牌，也不得绕过集成层改用浏览器操作。
-- `GH_TOKEN` 是敏感信息：严禁打印、回显、插值展示、记录或写入其值。
+- 推送前检查开放 Issue、分类 label、本人 assignee、分支拓扑、测试、提交范围和用户授权。
+- `push_issue_branch_to_origin` 只推送当前同名分支到 `origin`，不强推；Fork 的镜像 main 使用独立工具并遵守 Fork 流程。
+- PR 正文需说明范围和验收，并用 `Closes #N`、`Fixes #N` 或 `Resolves #N` 关联 Issue。获授权后使用 `create_github_pull_request`；工具通过临时 body-file 创建、默认指派本人并保持 PR 开放。
+- 创建后用 `audit_issue_pr_policy` 核对开放状态、关联关系和预期 base/head。推送/创建/审计失败时停止后续交付。
 
-  **禁止的行为（非穷举）**：
-  - 终端与工具输出（如 `echo $GH_TOKEN`、`printenv GH_TOKEN`）
-  - 日志文件、源代码、配置文件
-  - 提交信息、Issue、Pull Request、评论和错误报告
-  - 调试输出（如 `set -x` 后执行含令牌的命令）
+## 合并
 
-### Issue 与 PR 流程
+不自动合并 PR。只有用户明确授权且 required checks 通过、PR 可合并、无 changes-requested 时调用 `merge_github_pull_request`。Fork 需求 PR 合并到个人维护分支；`main` base 只允许 squash。合并后回读实际 base 和状态。
 
-- 进入 GitHub 协作流程时，新增功能或修复须关联开放 Issue；本地审查和已授权的本地修改可先完成。用户明确要求推送时，若没有相关联的开放 Issue，直接按本文件规则创建并核验，推送前必须补齐开放 Issue。
-- 使用 `gh` CLI 创建 Issue 或 PR 前，必须先把完整描述内容写入本地 `.md` 文件，再通过 `--body-file <path>` 传入。Issue 使用独立的 Issue 正文文件，PR 使用独立的 PR 正文文件；标题、标签、assignee、base/head 等非 Markdown 参数可以继续直接传入命令行。不要使用 `--body` 或其他命令行内联方式传入 Markdown 正文，以免 shell 转义或 Markdown 解析错误。
-- Issue 必须清晰、详细地说明以下内容：
-  - 功能需求或缺陷表现
-  - 影响范围
-  - 预期行为与验收标准
-  - 必要时补充：复现步骤、技术约束、前置依赖
-- 创建新 Issue 时必须最终完成分类标签。正常情况下应在创建调用中一次性附加；只有已授权 GitHub 集成层缺少 label 枚举能力时，才允许使用下面的受限降级流程：
-  1. **优先读取已有标签**：使用 `gh label list --limit 100 --json name,description,color`，或调用已授权 GitHub 集成层提供的等效标签查询操作。只要当前工具能够枚举仓库 labels，就必须先读取并复用仓库现有标签体系；默认标签也可能被仓库维护者修改或删除，因此此时不得跳过读取直接猜名称。
-  2. **判断 Issue 类别**：根据 Issue 的主要目的选择至少一个能够表达工作类型的标签。优先复用仓库已经定义且语义明确的类型标签；若仓库沿用 GitHub 默认标签，可使用 `bug` 表示缺陷、`documentation` 表示纯文档改动、`enhancement` 表示新增功能或改进，`question` 仅用于确实以信息确认或答疑为主的 Issue。
-  3. **受限枚举降级**：仅当已授权 GitHub Connector / GitHub App 明确没有仓库 label 列表能力，但 Issue 创建接口支持 `labels` 且创建后能够读取 Issue labels 时启用。先利用当前集成可见的可靠仓库证据复用已知类别标签，例如近期 Issue 上已回读到的标签、仓库 Issue 模板或仓库文档中明确声明的标签；若没有此类证据，再根据 Issue 语义从 GitHub 常见默认工作类型标签 `bug`、`documentation`、`enhancement`、`question` 中选择一个保守候选。该候选必须直接随创建请求写入，并以创建返回值或立即回读结果作为有效性验证；不得把“常见默认标签”描述成已经确认存在。
-  4. **区分主类别与辅助标签**：`good first issue`、`help wanted`、优先级、状态、组件或领域等标签可以追加，但不能替代工作类型分类标签。若仓库已有更细的 `type:*`、组件或领域标签体系，应遵循仓库约定，可同时附加多个标签以提高筛选能力。
-  5. **创建时一次性附加**：`gh` CLI 使用 `gh issue create ... --label "<类别标签>" --assignee "@me"`；多个标签可重复传入 `--label`。GitHub Connector / GitHub App 应在 Issue 创建调用中通过等效 `labels` 与 `assignees` 字段一次性附加分类标签和本人责任人。受限枚举降级仍应优先在同一次创建调用中传入候选 label，不应把“先创建、以后人工补标签”作为常规流程。
-  6. **创建后核验**：使用 `gh issue view <编号> --json number,title,state,labels,assignees`，或集成层的等效 Issue 读取操作，确认目标仓库、Issue 编号、标签和本人 assignee 均正确。受限枚举降级必须依赖这一步完成最终验证；若创建接口返回结果已经包含完整 labels，也应确认其中确实存在预期工作类型标签。
-  7. **失败时再阻塞**：若候选标签被 API 拒绝，或 Issue 已创建但返回/回读未包含预期类别标签，应先使用当前集成已有的标签修改能力立即修正并再次核验；若仍无法写入有效类别标签，才视为标签能力阻塞，明确报告 Issue 编号与失败原因，并禁止继续推送开发变更。只有在当前用户任务已经授权修改仓库标签体系时，才创建稳定、可复用的新标签后继续；不得为单个 Issue 随意发明一次性标签。
-- 若组织或仓库同时使用 GitHub Issue types，可将其作为额外分类元数据；本 Skill 仍要求保留至少一个类别 label，以便在 Issue/PR 列表、搜索和筛选中快速识别工作类型。
-- Issue 和 PR 默认指派给当前已认证的本人 GitHub 账号；只有当前用户明确指定其他责任人时才覆盖此默认值：
-  1. **先解析当前账号**：`gh` CLI 使用 `gh api user --jq .login` 获取当前登录用户名；GitHub Connector / GitHub App 使用其当前用户/登录信息查询能力。不得假设仓库 owner 一定等于当前认证账号，也不得在 Skill 中硬编码用户名。
-  2. **Issue 自指派**：创建 Issue 时优先直接使用 `--assignee "@me"` 或创建接口的 `assignees` 字段，与分类标签一起写入。
-  3. **PR 自指派**：`gh pr create` 使用 `--assignee "@me"`。若 GitHub 集成层的 PR 创建接口不提供 assignee 字段，应在 PR 创建成功后立即通过该 PR 对应的 Issue/assignee 接口把当前登录用户名加入 assignees；这属于创建流程的一部分，不视为人工补录。
-  4. **创建后核验**：Issue 使用 `gh issue view <编号> --json assignees`，PR 使用 `gh pr view <编号> --json assignees`，或集成层等效读取操作，确认本人账号确实在 assignees 中。若指派失败、当前身份不可被指派或工具缺少必要能力，应明确报告阻塞，不得把 Issue/PR 创建流程视为完成。
-- 实现改动必须通过 Pull Request 合并，并在 PR 描述中通过 `Closes #<Issue 编号>`（或等效关键字）关联对应的开放 Issue。
-- 未关联任何开放 Issue 时，禁止将本地改动推送到 GitHub。
+## 能力边界
+
+MCP 不提供 branch protection/rulesets 的增删改查、首次 upstream URL 配置或 GitHub 账号修复工具。遇到这些动作时保留现场并报告；不要用旧文档中的原始命令或通用命令执行器绕过。

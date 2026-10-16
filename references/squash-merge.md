@@ -1,10 +1,7 @@
-### 合并到 main 的 Squash Merge 规范
+# 合并到 main 的 Squash Merge
 
-- Pull Request 的目标分支为 `main` 时，最终合并必须使用 **Squash Merge**。不得使用普通 merge commit 或 rebase merge 把该 PR 开发过程中的多个 commits 逐个带入 `main`。
-- 目标结果是：一个 PR 在 `main` 历史中只产生一个代表该 PR 整体改动的 commit。PR 分支内部允许存在多个开发过程 commits；是否为了审查体验而提前整理 PR 的 Commits 页面属于可选维护，不是本规则的前置要求。
-- 合并前仍必须完成现有核验：确认目标仓库和 PR 编号正确、base 为 `main`、PR 处于可合并状态，并确认项目要求的 CI / checks 已通过。Squash Merge 不替代这些检查。
-- 若合并后需要清理本地 PR head 分支，在合并前运行 `gh pr view <PR编号> --json headRefOid --jq .headRefOid` 并保存输出；按 [`merge-cleanup.md`](merge-cleanup.md) 比较这份 SHA 后再决定是否使用 `git branch -D`。不得用合并后查询到的 `headRefOid` 替代合并时记录。
-- 使用 GitHub CLI 时，明确执行 `gh pr merge <PR编号> --squash`；若仓库要求显式标题或正文，可同时提供对应参数，但不得改用 `--merge` 或 `--rebase`。
-- 使用已授权 GitHub Connector / GitHub App 集成层时，必须调用其等效的 squash merge 能力，并显式设置 merge method 为 `squash`；若集成层无法选择 squash merge，则报告能力阻塞，不得退化为普通 merge。
-- 合并完成后核验 PR 已 merged，并检查 `main` 的结果提交：该 PR 的改动应以单一提交进入 `main`，而不是把 PR 分支的多个开发 commits 原样展开到主分支历史。
-- 若仓库设置禁止 Squash Merge，视为与本 Skill 规则冲突。除非用户明确授权调整仓库策略或明确覆盖本规则，否则不要使用其他 merge method 代替。
+Pull Request 的目标分支为 `main` 时，最终合并必须使用 squash merge。这样每个 PR 在 `main` 历史中只产生一个代表整体改动的提交；PR 分支内部仍可保留多个开发提交。
+
+合并前确认目标仓库、PR 编号、base/head、PR 状态、审核决定和项目要求的 checks。已知 PR 编号时，调用只读 MCP 工具 `audit_issue_pr_policy`，传入 `repo_path`、`repo`、`pr_number`、`expected_base` 和 `expected_head` 检查策略；再调用 `merge_github_pull_request`，传入 `repo_path`、`repo`、`pr_number` 和 `merge_method`（值为 `squash`）。该工具会核验 PR 为 OPEN/MERGEABLE、required checks 通过、没有 changes-requested review，且 `main` 只允许 squash。若仓库禁止 squash、核验失败或工具执行失败，停止并报告，不要换成其他合并方法。
+
+工具成功合并后会回读确认 PR 状态，并返回合并前读取的 `pre_merge_head_oid`。若用户明确授权合并后清理本地分支，保存此 SHA，并按 [`merge-cleanup.md`](merge-cleanup.md) 将它作为 `merged_head_oid` 传给 `cleanup_merged_pr_local_branch`。合并成功但回读验证失败时，先根据响应核实 GitHub 状态；响应中仍会带上合并前 SHA。

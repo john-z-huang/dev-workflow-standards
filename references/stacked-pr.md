@@ -1,10 +1,6 @@
 # 堆叠 PR 拓扑
 
-本文只描述“当前分支依赖另一条尚未合并分支”时的 base/head 关系；Issue 内容、标签、认证、合并和清理由上层工作流处理。
-
-当一个功能依赖尚未合并的分支，或用户明确要求以已有功能分支作为 PR 目标时，使用堆叠 PR，不要默认将目标分支设为 `main`。
-
-典型拓扑如下：
+当当前分支依赖另一条尚未合并的分支，或用户明确要求以已有功能分支作为目标时，PR 的 base 应为该基础分支，不要默认设为 `main`。
 
 ```text
 main
@@ -12,33 +8,13 @@ main
     └── agent/issue-8-runtime   # 新功能分支，PR base 为 issue-7 分支
 ```
 
-## 创建拓扑
+## 创建与核验
 
-1. 确认基础分支、head 分支和已有 PR：`git branch -vv`、`gh pr list`、`gh pr view`。
-2. 从基础分支的最新状态创建或更新 head 分支。
-3. 只在 head 分支提交当前工作项；不重复提交基础分支已有改动。
-4. PR 必须显式指定 base 和 head，例如：
+1. 调用 `audit_repository_state` 并传入 `repo_path`，核实仓库、当前分支和 Fork/default-branch 信息；调用 `list_repository_worktrees` 并传入 `repo_path`，核对现有 worktree。若已知基础分支和 head 分支，从指定基础分支创建隔离 worktree 时调用 MCP 工具 `create_repository_worktree`，传入 `repo_path`、`target_worktree_path`、`branch_name` 和 `base_branch`。先经 `check_branch_names` 校验新分支名。
+2. 只在 head 分支提交当前工作项；不重复提交基础分支已有改动。项目具体改动与测试仍由项目流程决定。
+3. 创建 PR 时调用 MCP 工具 `create_github_pull_request`，传入 `repo_path`、`repo`、`title`、`body`、`base_branch`、`head_branch` 和 `issue_number`，显式设置预期 base/head，并确保正文关联对应 Issue。若 PR 已存在且编号已知，调用 `audit_issue_pr_policy` 显式核验 Issue、PR、预期 base/head。
+4. 推送前根据 Issue 状态、标签和指派关系确认适用条件；符合时调用 `push_issue_branch_to_origin`。该工具只推送当前同名分支，不强推。
 
-   ```bash
-   gh pr create --draft --base <base-branch> --head <head-branch> \
-     --title "<title>" --body-file <pr-body-file>
-   ```
+当前 MCP 服务不能列出未知 PR 编号，也不提供改 PR base、关闭错误 PR、revert、cherry-pick 或解决拓扑冲突的工具。遇到错误拓扑或无法发现对应 PR 时，保留现场并报告缺少的能力，不以任意命令绕过。
 
-5. 创建或更新后核验目标没有意外变成 `main`：
-
-   ```bash
-   gh pr view <pr-number> --json baseRefName,headRefName,state,url
-   git diff <base-branch>...<head-branch> --stat
-   ```
-
-## 拓扑错误
-
-如果已经错误地从基础分支向 `main` 发起了 PR，且该 PR 尚未合并：
-
-- 按授权关闭错误 PR；
-- 已推送到基础分支的错误提交使用 `git revert <commit>` 撤回，不改写共享分支历史；
-- 推送撤回提交后，从更新后的基础分支创建新的 head 分支；
-- 使用 `git cherry-pick <original-commit>` 或重新实现，将已验证的功能提交到新分支；
-- 新 PR 显式设置 `--base <base-branch>`，而不是依赖 CLI 默认目标分支。
-
-基础分支合并后，再根据仓库协作约定更新堆叠 PR 的 base；更新前先确认差异范围，并避免未经授权的强制推送。
+基础分支合并后，如需更新堆叠 PR 的 base，先由用户提供确切 PR 编号和新的 base，再按项目约定评估差异；目前没有自动更新 base 的工具。

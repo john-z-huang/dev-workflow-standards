@@ -1,37 +1,31 @@
 ---
 name: dev-workflow-standards
 description: >-
-  通用开发工作流规范：默认直接在当前工作区开发；用户明确要求时提供 Git worktree 隔离与串行交付、分支命名与提交约定、禁止 Code Agent 署名、
-  GitHub Issue/PR 流程、Fork 上游同步与个人维护分支、双分支保护规则、堆叠 PR 的 base/head 分支管理、gh CLI 与 GitHub 集成层操作规范、
-  GH_TOKEN 安全处理、网络与认证排查、禁止特定 Code Agent 独占功能、中文文档与提交语言要求、顺序工作流。适用于任何需要严格开发纪律的项目。
+  通用开发工作流规范：按情境选择本地开发、worktree、GitHub、Fork、验证、Hook 与恢复流程；
+  保留分析、顺序、权限和验收规则，并用 dev-workflow-standards MCP 的专用工具执行固定操作。
 ---
 
 # 通用开发规范
 
-本文件只负责入口导航。匹配本 Skill 后，立即进入 `workflows/`；不要在本文件中寻找具体 Git、GitHub、验证、Hook、环境或异常处理步骤。
+本 Skill 保留场景判断、执行顺序、授权边界和完成条件。固定 Git/GitHub 操作交给本地 MCP 服务；不要自行重建这些工具已经封装的命令。
 
-## 会话级执行模式
+## 必须执行
 
-- 用户明确确认执行模式后，该模式在当前会话的后续指令中持续有效；默认沿用已确认模式，不重复询问。
-- 只有用户在指令中明确要求改变执行模式时，才重新进入模式确认；若更高优先级约束使当前模式不可用，按恢复规则报告阻塞，不擅自换模式或重复询问同一模式。
-- worktree 是可选执行模式：除非用户在指令中明确要求使用或创建 worktree，否则默认直接在当前工作区完成任务。仓库存在 remote、需要 GitHub 交付、需要分支或存在并行工作项，都不会单独触发 worktree。
+1. 读取 [`workflows/index.md`](workflows/index.md)，只选择并读取适用工作流。
+2. 严格按工作流顺序执行；按需读取指定的 `references/`，不要启动时通读。
+3. 固定 Git/GitHub 操作使用 [`references/mcp-tools.md`](references/mcp-tools.md) 中点名的 MCP 工具，并传入本次目标仓库的绝对 `repo_path`。
+4. 用户授权先于工具调用。MCP 工具的可用性或注解不构成授权；Codex 对非只读工具另行执行配置的调用确认。
+5. 用户上下文相关的判断、代码/文档修改、项目自定义测试和检查继续按适用工作流处理；不得把任意 shell、git、gh 或测试命令作为 MCP 工具参数。
+6. 工具缺失、仓库身份不明、权限或网络失败、结果校验失败时，停止该操作并按恢复流程报告；不要改用手写命令绕过固定工具。
+7. 完成前通过工作流的 Completion Gate，核对工作区、worktree、分支和 GitHub 状态，并明确说明未验证或未覆盖项。
 
-## 必须执行的导航
+## 授权边界
 
-1. 读取 [`workflows/index.md`](workflows/index.md)，按场景选择一个工作流。
-2. 只读取所选工作流；按其中的队列从上到下执行。
-3. 每次只处理当前步骤，并完成该步骤列出的检查项和退出条件。
-4. 需要细节时，按索引只读取当前步骤所需的 `references/` 文档。
-5. 缺少输入/授权、发生冲突、网络或验证失败时，停止当前工作并读取恢复工作流。
-6. 所有适用步骤和验证完成后，检查 Completion Gate，再报告完成。
-
-## 不可绕过的入口边界
-
-- 加载本 Skill 不自动授权提交、推送、Issue/PR、外部消息、合并、删除或历史重写。
-- 用户明确要求将改动推送到 GitHub 时，按 GitHub 工作流自动完成缺失 Issue 和关联 PR 的创建，不再另行询问；该请求不包含自动关闭或合并 PR。
-- 令牌、密码和凭据不得输出、记录、写入命令文本、日志、文件或提交；使用既有授权连接。
-- 具体规则以 `SKILL.md`、所选 `workflows/` 文档和按需加载的 `references/` 权威内容共同确定；发生冲突时按 [`workflows/index.md`](workflows/index.md) 的权威性顺序停止并处理。
+- 加载本 Skill 不自动授权 Git 写入、Hook 配置、推送、Issue/PR、合并、删除、强制操作或历史重写。
+- 用户明确要求将改动推送到 GitHub 时，按 GitHub 工作流补齐缺失 Issue 并创建关联 PR；这不授权合并或关闭 PR。
+- 不输出、记录、插值、写入或要求用户粘贴令牌、密码或凭据；使用既有授权连接。
+- 用户明确要求 worktree 时才使用 worktree；GitHub remote、分支需求或并行工作本身不改变默认工作区。
 
 ## 按需加载
 
-不要启动时通读所有参考文档。由 [`workflows/index.md`](workflows/index.md) 和当前工作流决定何时读取 `references/`；具体操作必须在当前步骤中完成。
+由 [`workflows/index.md`](workflows/index.md) 决定工作流与参考文档。只有在处理固定 Git/GitHub 操作时读取 [`references/mcp-tools.md`](references/mcp-tools.md) 查找工具名和参数。

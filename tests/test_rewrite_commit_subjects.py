@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""历史提交标题重写脚本测试。"""
+"""提交标题兼容脚本测试。"""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ import unittest
 from pathlib import Path
 
 
-SCRIPT = Path(__file__).parents[1] / "scripts" / "rewrite_weather_commit_subjects.py"
+SCRIPT = Path(__file__).parents[1] / "scripts" / "rewrite_commit_subjects.py"
 PYTHON = sys.executable
 
 
@@ -23,14 +23,14 @@ def run_rewriter(message: str) -> subprocess.CompletedProcess[str]:
     )
 
 
-class RewriteWeatherCommitSubjectsTests(unittest.TestCase):
-    def test_rewrites_legacy_subject_and_preserves_body(self) -> None:
-        result = run_rewriter("添加十类气象数据 Python 处理脚本\n\n保留正文。\n")
+class RewriteCommitSubjectsTests(unittest.TestCase):
+    def test_rewrites_generic_subject_and_preserves_body(self) -> None:
+        result = run_rewriter("添加基础校验脚本\n\n保留正文。\n")
 
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(
             result.stdout,
-            "feat: 添加十类气象数据 Python 处理脚本\n\n保留正文。\n",
+            "feat: 添加基础校验脚本\n\n保留正文。\n",
         )
 
     def test_leaves_prefixed_subject_unchanged(self) -> None:

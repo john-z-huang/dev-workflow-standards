@@ -1,51 +1,7 @@
 # Issue/PR 工作流审计
 
-## 功能描述
+使用只读 MCP 工具 `audit_issue_pr_policy` 检查 GitHub Issue/PR。输入字段为必填 `repo_path`，以及可选 `repo`、`issue_number`、`pr_number`、`expected_base` 和 `expected_head`。该工具检查 Issue 或 PR 是否开放、PR base/head 是否符合显式预期，以及 PR 正文是否用 `Closes`、`Fixes` 或 `Resolves` 关联指定 Issue。
 
-`scripts/check-pr-policy.py` 通过 GitHub CLI 的 REST API 只读检查：
+至少提供一个编号。`expected_base` 和 `expected_head` 只能与 `pr_number` 一起传入。创建 PR 后、请求审核前，以及需要核验已知 PR 的分支拓扑时调用。该工具不创建、修改、关闭或合并资源，也不提供任意 GitHub API 请求。
 
-- Issue 是否处于开放状态；
-- PR 是否处于开放状态；
-- PR 的 base/head 是否符合显式指定的预期；
-- PR 描述是否包含 `Closes #<Issue>`、`Fixes #<Issue>` 或 `Resolves #<Issue>`。
-
-脚本不创建、修改、关闭或合并任何 GitHub 资源。
-
-## 触发时机
-
-- 创建 PR 后、请求审核前执行；
-- 对需要核验 PR 拓扑时执行；
-- 也可以在 CI 中作为只读策略检查。
-
-该检查不放入每次本地 `pre-push`，因为它需要网络和 GitHub 授权，且推送前可能尚未存在 PR。
-
-## 手动执行
-
-```bash
-# 只检查 Issue 是否开放
-python3 scripts/check-pr-policy.py \
-  --repo owner/repo --issue 7
-
-# 同时检查 Issue、PR 关联关系和 base/head
-python3 scripts/check-pr-policy.py \
-  --repo owner/repo \
-  --issue 7 \
-  --pr 42 \
-  --expected-base main \
-  --expected-head feat/add-validation
-```
-
-`--expected-base` 和 `--expected-head` 必须与 `--pr` 一起使用；base 可以是任意已明确核验的目标分支，不默认假设为 `main`。
-
-## 约束边界
-
-脚本可以验证状态、编号、关键词和分支拓扑，但不能判断 Issue 描述是否“足够清晰”、提交是否混入多个语义模块，也不能检测用户是否绕过浏览器完成 GitHub 操作。这些内容仍需人工 Review 或 CI 规则补充。
-
-## 退出码
-
-| 退出码 | 含义 |
-|--------|------|
-| 0 | 所有请求的 Issue/PR 检查通过 |
-| 1 | GitHub 资源存在但违反工作流策略 |
-| 2 | 参数错误 |
-| 3 | gh 命令、网络或 JSON 响应失败 |
+它只能判断状态、编号、关键词和分支拓扑，不能判断 Issue 描述是否足够清晰、提交是否混入多个语义模块，也不能代替人工 Review 或项目 CI。需要发现未知 PR 编号时，本服务没有 PR 列表工具；请依据用户提供的信息或现有上下文处理，无法确定时说明当前能力限制。
