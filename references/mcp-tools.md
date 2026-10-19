@@ -1,8 +1,42 @@
 # MCP 工具目录
 
-本地 Codex MCP 服务名为 `dev-workflow-standards-mcp`。固定 Git/GitHub 操作只用本表所列的专用工具，不传 shell、git、gh 或测试命令。所有 repo-bound 工具都要求本次目标仓库的绝对 `repo_path`，且只在该 Git 根目录/worktree 内操作；不要假设 MCP 进程启动目录就是目标项目。
+本地 Codex 可配置 Python MCP 服务 `dev-workflow-standards-mcp` 和 TypeScript MCP 服务 `dev-workflow-standards-ts`。Python 工具保留原名；TypeScript 服务为同一组 25 个工具追加 `_ts` 后缀，输入、行为和安全边界按 Python 实现对齐。固定 Git/GitHub 操作只用本表所列的专用工具，不传 shell、git、gh 或测试命令。所有 repo-bound 工具都要求本次目标仓库的绝对 `repo_path`，且只在该 Git 根目录/worktree 内操作；不要假设 MCP 进程启动目录就是目标项目。
 
 只读工具带 `read_only_hint`；其他工具带写入/破坏性注解，Codex 服务配置为 `default_tools_approval_mode="writes"`。这些确认与注解不取代 Skill 中的用户授权前置条件。`gh` 工具使用本机已授权的 GitHub CLI，不接受或输出令牌。
+
+## TypeScript 工具名映射
+
+以下 TypeScript 工具由 `dev-workflow-standards-ts` 暴露；每项沿用同名 Python 工具的输入与行为。
+
+| Python 工具 | TypeScript 工具 |
+|---|---|
+| `check_branch_names` | `check_branch_names_ts` |
+| `check_commit_message` | `check_commit_message_ts` |
+| `check_staged_changes` | `check_staged_changes_ts` |
+| `stage_repository_paths` | `stage_repository_paths_ts` |
+| `commit_repository_changes` | `commit_repository_changes_ts` |
+| `audit_issue_pr_policy` | `audit_issue_pr_policy_ts` |
+| `cleanup_merged_pr_local_branch` | `cleanup_merged_pr_local_branch_ts` |
+| `audit_repository_state` | `audit_repository_state_ts` |
+| `list_github_issue_labels` | `list_github_issue_labels_ts` |
+| `create_github_issue` | `create_github_issue_ts` |
+| `push_issue_branch_to_origin` | `push_issue_branch_to_origin_ts` |
+| `create_github_pull_request` | `create_github_pull_request_ts` |
+| `merge_github_pull_request` | `merge_github_pull_request_ts` |
+| `push_fork_main_fast_forward` | `push_fork_main_fast_forward_ts` |
+| `list_repository_worktrees` | `list_repository_worktrees_ts` |
+| `switch_repository_branch` | `switch_repository_branch_ts` |
+| `pull_origin_branch_fast_forward` | `pull_origin_branch_fast_forward_ts` |
+| `fetch_upstream_branch` | `fetch_upstream_branch_ts` |
+| `merge_upstream_branch_fast_forward` | `merge_upstream_branch_fast_forward_ts` |
+| `rebase_repository_branch` | `rebase_repository_branch_ts` |
+| `remove_repository_worktree` | `remove_repository_worktree_ts` |
+| `create_repository_worktree` | `create_repository_worktree_ts` |
+| `capture_untracked_file_manifest` | `capture_untracked_file_manifest_ts` |
+| `copy_untracked_files_to_worktree` | `copy_untracked_files_to_worktree_ts` |
+| `configure_project_hooks_path` | `configure_project_hooks_path_ts` |
+
+工具 schema、结果内容、注解和授权前置条件按下方原始 Python 工具目录理解；TypeScript 服务不改变 Python 服务名或行为。
 
 ## 检查与只读审计
 
