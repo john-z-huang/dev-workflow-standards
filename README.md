@@ -18,25 +18,26 @@ codex mcp list
 
 ## 安装 TypeScript MCP 服务
 
-需要 Node.js 20 或更高版本。在 `mcp-server-ts/` 安装锁定依赖并构建：
+需要 Node.js 20 或更高版本。在本仓库根目录安装锁定依赖并构建：
 
 ```bash
-cd mcp-server-ts
-npm ci
-npm run build
+npm --prefix ./mcp-server-ts ci
+npm --prefix ./mcp-server-ts run build
 ```
 
-在 Codex 的 `config.toml` 中添加独立的 server id。将 `cwd` 替换为 `mcp-server-ts/` 的绝对路径；此示例不会覆盖 Python MCP 配置：
+用 Codex CLI 注册一个独立的 server id。默认使用 ChatGPT Desktop 捆绑的 Node；若应用安装在其他位置，可将 `CHATGPT_APP` 设为对应的 `ChatGPT.app` 绝对路径。若默认路径不存在，请先定位本机 ChatGPT Desktop 捆绑的 Node，再填写它的绝对路径；不要回退到系统 `node`。服务器入口也使用绝对路径，直接启动 `dist/server.js`：
 
-```toml
-[mcp_servers.dev-workflow-standards-ts]
-command = "npm"
-args = ["run", "start"]
-cwd = "/absolute/path/to/dev-workflow-standards/mcp-server-ts"
-default_tools_approval_mode = "writes"
+```bash
+CHATGPT_APP="${CHATGPT_APP:-/Applications/ChatGPT.app}"
+NODE="$CHATGPT_APP/Contents/Resources/cua_node/bin/node"
+test -x "$NODE" || { echo "ChatGPT Desktop bundled Node not found: $NODE" >&2; exit 1; }
+SERVER="$(cd ./mcp-server-ts && pwd)/dist/server.js"
+codex mcp add dev-workflow-standards-ts -- \
+  "$NODE" \
+  "$SERVER"
 ```
 
-完成配置后运行 `codex mcp list`，并在需要时重启 Codex 会话以加载服务。TypeScript 工具名称在 Python 工具原名后追加 `_ts`；完整映射与输入/副作用说明见 [`references/mcp-tools.md`](references/mcp-tools.md)。
+`codex mcp add` 会把服务写入本机 Codex 全局配置。用 `codex mcp get dev-workflow-standards-ts` 检查启动命令和启用状态，并用 `codex mcp list` 查看已注册服务。桌面端尚未加载新增的 MCP 服务时，完整重启 Codex 应用；仅新建对话不一定会刷新 MCP 列表。使用绝对路径直接启动 Node.js，避免 `npm run start` 输出脚本横幅干扰 stdio MCP 协议流。TypeScript 工具名称在 Python 工具原名后追加 `_ts`；完整映射与输入/副作用说明见 [`references/mcp-tools.md`](references/mcp-tools.md)。
 
 editable uv tool 指向本地 `mcp-server/` 源码；移动或归档其所在 worktree 前，应先将工具重新安装到稳定路径。
 
