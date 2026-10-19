@@ -1,0 +1,26 @@
+{
+  "name": "dev-workflow-standards-mcp-ts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Codex-only TypeScript MCP v2 tools for dev-workflow-standards",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "start": "node dist/server.js",
+    "validate:tools": "node dist/validate-tools.js",
+    "validate:stdio": "node dist/validate-stdio.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "^2.3.1",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/client": "^2.3.1",
+    "@types/node": "^24.10.0",
+    "typescript": "^6.0.3"
+  }
+}
