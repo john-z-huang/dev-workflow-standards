@@ -638,4 +638,4 @@ def push_fork_main_fast_forward(repo_path: str, repo: str) -> dict[str, Any]:
     if ancestor.returncode != 0:
         return {"ok": False, "error": "upstream/main 尚未快进合入本地 main"}
     pushed = _run_fixed(["git", "push", "origin", "main"], cwd=root)
-    return {"ok": pushed.returncode == 0, "repo_path": root, "repo": repo, "branch": "main", "error": None if pushed.returncode == 0 else "git push origin main 失败；未强推"}\n
+    return {"ok": pushed.returncode == 0, "repo_path": root, "repo": repo, "branch": "main", "error": None if pushed.returncode == 0 else "git push origin main 失败；未强推"}
