@@ -37,8 +37,8 @@ from .validation import check_commit_message
 
 class ManifestEntry(BaseModel):
     path: str = Field(description="仓库根目录相对 POSIX 路径")
-    sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
-    size: int = Field(ge=0)
+    sha256: str = Field(pattern=r"^[0-9a-f]{64}$", description="源普通文件的 SHA-256 小写十六进制摘要，须来自 capture_untracked_file_manifest。")
+    size: int = Field(ge=0, description="源文件的字节数，须与 capture_untracked_file_manifest 结果一致。")
 
 
 def audit_repository_state(repo_path: str) -> dict[str, Any]:

@@ -15,8 +15,8 @@ def register_repository_tools(server: MCPServer) -> None:
     tools = (
         (workflows.list_repository_worktrees, read_only),
         (workflows.switch_repository_branch, local_write),
-        (workflows.pull_origin_branch_fast_forward, local_write),
-        (workflows.fetch_upstream_branch, local_write),
+        (workflows.pull_origin_branch_fast_forward, ToolAnnotations(read_only_hint=False, destructive_hint=False, idempotent_hint=False, open_world_hint=True)),
+        (workflows.fetch_upstream_branch, ToolAnnotations(read_only_hint=False, destructive_hint=False, idempotent_hint=False, open_world_hint=True)),
         (workflows.merge_upstream_branch_fast_forward, local_write),
         (workflows.rebase_repository_branch, destructive_write),
         (workflows.remove_repository_worktree, destructive_write),

@@ -21,6 +21,8 @@
 
 | 遇到的问题 | 读取 |
 |---|---|
+| 通过 Decisions 判断工作流/会话事实分支，或生成 Issue、PR、提交信息、计划、交接和会话摘要 | [`../references/openai-workflow-tools.md`](../references/openai-workflow-tools.md) |
+| 用户提供先前 Codex 会话链接，需读取或保存会话事实 | [`../references/codex-session-facts.md`](../references/codex-session-facts.md) |
 | remote、worktree、未跟踪文件、空远端、串行交付或合并后 worktree 状态 | [`../references/worktree.md`](../references/worktree.md) |
 | 依赖未合并分支，需要确定 PR 的 base/head | [`../references/stacked-pr.md`](../references/stacked-pr.md) |
 | GitHub 网络、认证、Issue、标签、assignee 或 PR 流程 | [`../references/github.md`](../references/github.md) |
