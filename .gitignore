@@ -10,8 +10,7 @@
 *.swp
 *.swo
 
-# Memory files (session-specific)
-MEMORY.md
 
 __pycache__/
 .serena
+.pytest_cache

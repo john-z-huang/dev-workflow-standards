@@ -73,7 +73,7 @@ def _gh_object(args: list[str], cwd: str) -> tuple[Any, str | None]:
 
 
 def _temporary_body_file(body: str) -> tuple[tempfile.TemporaryDirectory[str], str]:
-    directory = tempfile.TemporaryDirectory(prefix="dev-workflow-mcp-")
+    directory = tempfile.TemporaryDirectory(prefix="dev-workflow-standards-tools-")
     path = Path(directory.name) / "body.md"
     path.write_text(body, encoding="utf-8")
     return directory, str(path)
