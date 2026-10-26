@@ -12,7 +12,7 @@
 uv run --managed-python -- scripts/setup-codex-mcp.py --install
 ```
 
-脚本从自身位置定位 `mcp-server/`，不依赖调用时的工作目录，也不依赖 token-io-decoupling。它默认处理 `dev-workflow-standards-tools`，将 `OPENAI_API_KEY` 和 `OPENAI_BASE_URL` 两个名称合并到该服务的 `env_vars`。只有变量名会写入配置，脚本不读取或打印这两个变量的值，不发起 OpenAI 请求。
+脚本从自身位置定位 `mcp-server/`，不依赖调用时的工作目录。它默认处理 `dev-workflow-standards-tools`，将 `OPENAI_API_KEY` 和 `OPENAI_BASE_URL` 两个名称合并到该服务的 `env_vars`。只有变量名会写入配置，脚本不读取或打印这两个变量的值，不发起 OpenAI 请求。
 
 可先预览安装和配置计划；`--install --dry-run` 不运行安装或注册命令，也不读写配置：
 
