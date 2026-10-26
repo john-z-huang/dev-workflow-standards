@@ -2,23 +2,25 @@
 
 from mcp.server import MCPServer
 
+from .tools._descriptions import SERVER_DESCRIPTION, SERVER_INSTRUCTIONS
 from .tools.github import register_github_tools
 from .tools.git import register_git_tools
+from .tools.ai_workflow import register_ai_workflow_tools
+from .tools.codex_session_facts import register_codex_session_fact_tools
 from .tools.repository import register_repository_tools
 
 
 mcp = MCPServer(
     "dev-workflow-standards-tools",
-    instructions=(
-        "Tools act on the explicitly supplied repo_path and run only fixed, domain-specific Git/GitHub operations. "
-        "Check applicable user authorization before every write and rely on Codex writes approval. "
-        "If an operation is not covered, do not substitute a generic command runner."
-    ),
+    description=SERVER_DESCRIPTION,
+    instructions=SERVER_INSTRUCTIONS,
 )
 
 register_git_tools(mcp)
 register_repository_tools(mcp)
 register_github_tools(mcp)
+register_codex_session_fact_tools(mcp)
+register_ai_workflow_tools(mcp)
 
 
 def main() -> None:

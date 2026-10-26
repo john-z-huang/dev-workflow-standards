@@ -3,7 +3,7 @@ name = "dev-workflow-standards-tools"
 version = "0.1.0"
 description = "Dedicated MCP tools for deterministic dev-workflow-standards operations"
 requires-python = ">=3.11"
-dependencies = ["mcp>=2,<3", "pydantic>=2,<3"]
+dependencies = ["mcp>=2,<3", "pydantic>=2,<3", "openai>=3.37,<4"]
 
 [project.scripts]
 dev-workflow-standards-tools = "dev_workflow_standards_tools.server:main"

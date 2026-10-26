@@ -3,17 +3,23 @@
 from mcp.server import MCPServer
 from mcp.types import ToolAnnotations
 
-from ..services import validation, workflows
+from ..services import ai_workflow, validation, workflows
 from ._registration import _register_adapter
 
 
 def register_github_tools(server: MCPServer) -> None:
     read_only = ToolAnnotations(read_only_hint=True, open_world_hint=True)
+    ai_read_only = ToolAnnotations(
+        read_only_hint=True,
+        destructive_hint=False,
+        idempotent_hint=False,
+        open_world_hint=True,
+    )
     write = ToolAnnotations(read_only_hint=False, destructive_hint=False, idempotent_hint=False, open_world_hint=True)
     destructive_write = ToolAnnotations(read_only_hint=False, destructive_hint=True, idempotent_hint=False, open_world_hint=True)
     idempotent_write = ToolAnnotations(read_only_hint=False, destructive_hint=True, idempotent_hint=True, open_world_hint=True)
     tools = (
-        (validation.audit_issue_pr_policy, read_only),
+        (ai_workflow.audit_issue_pr_policy, ai_read_only),
         (validation.cleanup_merged_pr_local_branch, destructive_write),
         (workflows.audit_repository_state, read_only),
         (workflows.list_github_issue_labels, read_only),
