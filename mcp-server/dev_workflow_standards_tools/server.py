@@ -8,7 +8,7 @@ from .tools.repository import register_repository_tools
 
 
 mcp = MCPServer(
-    "dev-workflow-standards-mcp",
+    "dev-workflow-standards-tools",
     instructions=(
         "Tools act on the explicitly supplied repo_path and run only fixed, domain-specific Git/GitHub operations. "
         "Check applicable user authorization before every write and rely on Codex writes approval. "
