@@ -1,6 +1,6 @@
 # GitHub 交付工作流
 
-固定 GitHub CLI 操作使用 [`mcp-tools.md`](../references/mcp-tools.md) 中点名的专用 MCP 工具；禁止浏览器/浏览器自动化。加载本工作流本身不授予 GitHub 写入权限；用户明确要求推送时，按本流程补齐缺失 Issue、推送分支并创建关联 PR，不再另行询问，但不自动合并或关闭 PR。
+固定写操作和强制 GitHub 门禁使用 [`mcp-tools.md`](../references/mcp-tools.md) 中点名的工具；查询优先用 MCP 或已授权 Connector，未覆盖的只读信息按 [`read-only-queries.md`](../references/read-only-queries.md) 使用 CLI。禁止浏览器/浏览器自动化。加载本工作流本身不授予 GitHub 写入权限；用户明确要求推送时，按本流程补齐缺失 Issue、推送分支并创建关联 PR，不再另行询问，但不自动合并或关闭 PR。
 
 操作策略见 [`github.md`](../references/github.md)、Fork 拓扑见 [`fork-maintenance.md`](../references/fork-maintenance.md)、合并策略见 [`squash-merge.md`](../references/squash-merge.md)。
 
@@ -19,7 +19,7 @@
 - 调用 `audit_repository_state`，传入目标仓库绝对 `repo_path`，确认仓库身份、remote、实际默认分支和 Fork `parent`。
 - 先确认目标仓库、Issue/PR、base/head；不猜 owner、用户名、编号或权限。
 - 网络或认证失败时按 [`recovery-and-exceptions.md`](recovery-and-exceptions.md) 停止。令牌不得输出、回显、插值、记录、写入或要求用户粘贴；不得因 CLI 受阻改用浏览器。
-- 个人 Fork 的 remote、个人维护分支和保护规则按 [`fork-maintenance.md`](../references/fork-maintenance.md) 判定；若所需专用工具未提供，停止并报告，不手写命令绕过。
+- 个人 Fork 的 remote、个人维护分支和保护规则按 [`fork-maintenance.md`](../references/fork-maintenance.md) 判定；保护规则等未覆盖的信息可按只读规约回读。写工具或强制门禁工具未提供时仍停止并报告，不手写命令绕过。
 
 ## 2. 准备 Issue
 

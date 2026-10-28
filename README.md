@@ -74,7 +74,9 @@ uv tool uninstall dev-workflow-standards-mcp
 
 Python 执行和依赖环境任务按需读取 [`references/python-environment.md`](references/python-environment.md)，Shell 脚本开发和验证按需读取 [`references/shell-environment.md`](references/shell-environment.md)。独立脚本无需先进入 Git 工作流；非开发任务不增加环境规则加载步骤。
 
-Git/GitHub 写操作必须先满足工作流中的用户授权和安全前置条件。服务只接受固定领域参数，不提供任意 shell、git、gh 或项目测试命令。工具未覆盖的操作要停止并报告，不要改用手写命令绕过。
+Git/GitHub 写操作必须先满足工作流中的用户授权和执行层审批；已有授权在原范围内持续有效。服务只接受固定领域参数，不提供任意 shell、git、gh 或项目测试命令。固定写操作和强制门禁使用规定工具；查询优先用 MCP 或已授权 Connector，未覆盖的只读信息查询可按 [`只读查询规约`](references/read-only-queries.md) 使用 CLI，无须逐次申请额外的业务授权。工具不可用、权限/认证/网络/状态/校验失败时停止对应步骤，不通过 CLI 绕过。
+
+只读按完整子命令、参数、配置和副作用判定：`status` 避免可选 index 写回，差异展示禁用外部 diff/textconv，`fetch` 仍属本地写入；REST 显式 GET，GraphQL 审阅 query/mutation；凭据、文件输出和复合步骤不自动豁免。这是 Agent 操作规范，不是新增命令解析器。用户全局 AGENTS 或已安装 Skill 仍有限制时继续遵守并报告；本仓库修改不自动更新全局规则或重载已安装服务。
 
 ### MCP 客户端可见的使用说明
 

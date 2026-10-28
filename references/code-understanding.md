@@ -36,7 +36,7 @@
 
 ## 普通文件工具的边界
 
-- 固定 Git/GitHub 操作按 [`mcp-tools.md`](mcp-tools.md) 使用专用 MCP；未封装的操作停止并报告，不手写 CLI 绕过。Serena 不替代仓库状态检查。
+- 固定写操作和强制 Git/GitHub 门禁按 [`mcp-tools.md`](mcp-tools.md) 使用专用工具；未覆盖的信息查询按 [`read-only-queries.md`](read-only-queries.md) 选择只读 CLI。未封装的写操作或必需工具失败仍停止并报告。Serena 和补充查询均不替代规定的仓库状态检查。
 - `rg`、`grep` 和普通文件读取用于 Markdown、YAML、JSON、日志、锁文件、生成文件、Serena 不支持的语言、精确文本搜索，以及 Serena 无法处理的文件。
 - `rg` 或普通文件读取找到候选后，如果后续需要理解源代码逻辑，应回到 Serena 的符号和引用分析，而不是继续依赖大段文本输出。
 

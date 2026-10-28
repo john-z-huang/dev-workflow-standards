@@ -2,7 +2,7 @@
 
 只做文档选择，不增加授权。匹配后只读取最相关的工作流；工作流无法解决时，再按下表查找参考文档。
 
-固定 Git/GitHub 操作必须使用 [`mcp-tools.md`](../references/mcp-tools.md) 中对应的专用 MCP 工具；MCP 不可用时不要用手写命令绕过，按恢复流程报告。用户情境判断、代码修改和项目自定义验证仍按所选工作流执行。
+固定写操作和强制审计/检查必须使用 [`mcp-tools.md`](../references/mcp-tools.md) 中的专用工具。查询优先用 MCP 或已授权 Connector；未覆盖的只读查询按 [`read-only-queries.md`](../references/read-only-queries.md) 使用 CLI。工具不可用或权限、认证、网络、状态、校验失败不属于查询未覆盖，不以 CLI 绕过，按恢复流程报告。用户情境判断、代码修改和项目自定义验证仍按所选工作流执行。
 
 仅处理 Python 环境、独立脚本或 Shell 脚本时，按下表读取相应环境文档即可，不要求先进入仓库或 Git/GitHub 工作流。项目工作流中涉及相关执行时，同样须在执行前加载对应文档；不在启动时通读两份环境规则。
 
@@ -25,6 +25,7 @@
 |---|---|
 | Python 解释器、虚拟环境、依赖选择，或脚本、模块与一次性命令执行 | [`../references/python-environment.md`](../references/python-environment.md) |
 | 本地或远端 Shell 选择，脚本生成、执行与兼容性验证 | [`../references/shell-environment.md`](../references/shell-environment.md) |
+| git/gh 只读查询、CLI 豁免、API 方法与写操作边界 | [`../references/read-only-queries.md`](../references/read-only-queries.md) |
 | 通过 Decisions 判断工作流/会话事实分支，或生成 Issue、PR、提交信息、计划、交接和会话摘要 | [`../references/openai-workflow-tools.md`](../references/openai-workflow-tools.md) |
 | 用户提供先前 Codex 会话链接，需读取或保存会话事实 | [`../references/codex-session-facts.md`](../references/codex-session-facts.md) |
 | remote、worktree、未跟踪文件、空远端、串行交付或合并后 worktree 状态 | [`../references/worktree.md`](../references/worktree.md) |

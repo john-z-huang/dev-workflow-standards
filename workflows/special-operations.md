@@ -1,6 +1,6 @@
 # 专项操作工作流
 
-只在用户或项目明确要求时执行。固定 Git 配置或文本转换使用 [`mcp-tools.md`](../references/mcp-tools.md) 点名的专用工具。
+只在用户或项目明确要求时执行。固定 Git 写配置或文本转换使用 [`mcp-tools.md`](../references/mcp-tools.md) 点名的专用工具；补充只读查询按 [`read-only-queries.md`](../references/read-only-queries.md) 处理，不授权历史重写、配置修改或兼容脚本后备执行。
 
 ## Hook
 

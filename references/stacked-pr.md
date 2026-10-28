@@ -15,6 +15,6 @@ main
 3. 创建 PR 时调用 MCP 工具 `create_github_pull_request`，传入 `repo_path`、`repo`、`title`、`body`、`base_branch`、`head_branch` 和 `issue_number`，显式设置预期 base/head，并确保正文关联对应 Issue。若 PR 已存在且编号已知，调用 `audit_issue_pr_policy` 显式核验 Issue、PR、预期 base/head。
 4. 推送前根据 Issue 状态、标签和指派关系确认适用条件；符合时调用 `push_issue_branch_to_origin`。该工具只推送当前同名分支，不强推。
 
-当前 MCP 服务不能列出未知 PR 编号，也不提供改 PR base、关闭错误 PR、revert、cherry-pick 或解决拓扑冲突的工具。遇到错误拓扑或无法发现对应 PR 时，保留现场并报告缺少的能力，不以任意命令绕过。
+当前 MCP 服务不能列出未知 PR 编号；可按 [`read-only-queries.md`](read-only-queries.md) 使用已授权 Connector 或 `gh pr list` 发现编号，再调用规定的 `audit_issue_pr_policy` 门禁。服务不提供改 PR base、关闭错误 PR、revert、cherry-pick 或解决拓扑冲突的工具；需要这些写操作、无法确定对应 PR 或查询失败时，保留现场并报告，不以任意命令绕过。
 
 基础分支合并后，如需更新堆叠 PR 的 base，先由用户提供确切 PR 编号和新的 base，再按项目约定评估差异；目前没有自动更新 base 的工具。

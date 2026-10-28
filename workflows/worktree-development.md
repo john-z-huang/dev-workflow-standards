@@ -1,6 +1,6 @@
 # Git Worktree 工作流
 
-仅当用户在当前指令中明确要求 worktree 时适用；remote、GitHub 交付、分支或并行任务都不会单独触发。固定 Git 操作用 [`mcp-tools.md`](../references/mcp-tools.md) 指定的 MCP 工具。操作细节与例外见 [`worktree.md`](../references/worktree.md)；Fork 拓扑见 [`fork-maintenance.md`](../references/fork-maintenance.md)。
+仅当用户在当前指令中明确要求 worktree 时适用；remote、GitHub 交付、分支或并行任务都不会单独触发。固定写操作和强制 Git 门禁用 [`mcp-tools.md`](../references/mcp-tools.md) 指定的工具；补充只读查询按 [`read-only-queries.md`](../references/read-only-queries.md) 处理，不能代替成功同步。操作细节与例外见 [`worktree.md`](../references/worktree.md)；Fork 拓扑见 [`fork-maintenance.md`](../references/fork-maintenance.md)。
 
 原始工作区只用于同步基线和管理 worktree。需求代码、测试、文档、暂存与提交都在对应需求 worktree 中完成。同步、隔离、清理均须符合用户授权及项目权限；创建 worktree 不自动授权提交或 GitHub 操作。
 

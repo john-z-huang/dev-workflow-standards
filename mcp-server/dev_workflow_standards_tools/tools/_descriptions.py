@@ -14,6 +14,17 @@ SERVER_INSTRUCTIONS = """
 
 **选择与顺序**
 
+**只读查询的覆盖边界**
+
+优先使用已可用且覆盖所需查询的 MCP 工具或已授权 Connector。若它们没有覆盖当前只读查询，可在当前任务和目标仓库范围内使用受限的 `git`/`gh` CLI 读取；无需为每次这类只读查询重复询问业务授权。各工作流指定的审计和检查门禁仍须在规定步骤完成；补充查询可收集后续门禁所需事实，但不能替代门禁或把失败门禁判为通过。缺少覆盖与工具不可用、权限/认证/网络/仓库状态/参数校验失败是不同情况；失败时不得改走 CLI 绕过门禁或失败原因。只读查询仍受适用的宿主 approval、sandbox 和更高优先级约束；这些约束不因只读性质豁免。
+
+只读必须按完整子命令、参数、配置和副作用判断，不得按 `git`/`gh` 前缀推定。`--no-pager` 是 Git 全局选项，须放在子命令前；`git status` 使用 `--no-optional-locks`；`diff`、`log`、`show` 子命令使用 `--no-ext-diff --no-textconv` 并限制输出范围/长度；branch、tag 仅用 `--list`，remote 用 `git remote` 列举。`git fetch` 会写本地 remote refs，不属于只读豁免。`gh issue/pr view` 与受支持的 issue/pr list 查询须显式指定 `--repo owner/repo`；`gh repo view` 使用位置参数 `owner/repo`，不可将 `--repo` 当作该命令的选项。`gh api` REST 不使用 `--repo` 选项；请求必须显式 `--method GET`，在已知查询 endpoint 中指定仓库（例如 `/repos/owner/repo/...`），并核实 endpoint 确为只读；`-f`/`-F` 等参数可能隐式选择 POST，不能将其视为 GET。GraphQL 仅限明确审阅过的 query；mutation 或动态/未知操作不在范围内。环境 helper、pager、alias 或 lazy fetch 可能产生副作用；无法确认完整行为时停止该查询。凭据读取、文件输出、下载、复合命令及其全部副作用需分别评估；本规则不授权这些操作，也不提供任意命令执行器。写入仍需用户对该写入的意图授权及适用的 Codex approval；既有授权仅在其范围内持续有效。
+
+合成命令形状（执行前将仓库路径、文件范围及编号替换为目标值并核验）：
+- `git --no-pager --no-optional-locks -C /workspace/repo status --short`
+- `git --no-pager --no-optional-locks -C /workspace/repo diff --no-ext-diff --no-textconv -- src/`
+- `gh api --method GET repos/example/project/issues/65 --jq '{number,title,state}'`
+
 1. `audit_repository_state` 核对指定仓库的本地状态和 remote 名称；随后按需使用 `list_repository_worktrees`、`check_branch_names`、`capture_untracked_file_manifest`、`check_staged_changes`。审计的 `ok=true` 仅表示本地 Git status/remotes 读取成功；`github` 仍可能为 null 且同时有 `github_error`，不能当作 GitHub 核验成功。
 2. 只有用户明确要求使用或创建 worktree 时才使用 worktree 流程：先 `create_repository_worktree`，然后如确需保留源仓库未跟踪文件，再 `capture_untracked_file_manifest` 并 `copy_untracked_files_to_worktree`。复制后检查结果再继续；失败返回也可能已部分复制，`copied` 只列确认完成项，工具不回滚，先检查目标，禁止盲目重跑覆盖。
 3. 修改本地分支前核对状态；同步 upstream 时先 `fetch_upstream_branch`，再按需要调用 `merge_upstream_branch_fast_forward`。`pull_origin_branch_fast_forward` 和 `fetch_upstream_branch` 会访问 remote 网络。`rebase_repository_branch` 改写本地历史；remove 会删除 worktree 目录；这些操作都要求对应授权。
@@ -40,7 +51,7 @@ TOOL_DESCRIPTIONS: dict[str, str] = {
     ),
     "check_staged_changes": (
         "对 repo_path 的暂存区运行固定 `git diff --cached --check`，检查空白错误；适用于 stage 后、commit 前。只读暂存内容，不运行测试或用户命令。"
-        "repo_path 必须是绝对仓库根目录。passed=true 表示该 Git 检查成功；否则检查 diagnostics/error/exit_code，再修复并重跑。无网络、无写入。"
+        "repo_path 必须是绝对仓库根目录。passed=true 表示该 Git 检查成功；否则检查 diagnostics/error/exit_code，再修复并重跑。无网络、无写入。额外只读查询按共享规则执行，不替代本工具，也不能将本工具失败或不可用当作 CLI 绕过理由。"
     ),
     "stage_repository_paths": (
         "仅将 paths 明列的普通仓库相对文件路径加入 Git index，适用于确认最终 diff 后的精确暂存。先检查 repo_path 与 paths，并确认用户授权；不会自动加入其他文件。"
@@ -68,7 +79,7 @@ TOOL_DESCRIPTIONS: dict[str, str] = {
     ),
     "fetch_upstream_branch": (
         "从已配置的 upstream 获取指定 branch_name，更新 remote-tracking 信息；适合随后检查或快进合并前，不会合并、推送或创建 remote。"
-        "repo_path 为绝对仓库根目录；upstream 必须已存在，branch_name 格式有效。ok=true 表示 fetch 成功。会联网，不改工作区文件但更新本地 Git remote refs；需要授权和 Codex writes approval。"
+        "repo_path 为绝对仓库根目录；upstream 必须已存在，branch_name 格式有效。ok=true 表示 fetch 成功。会联网，不改工作区文件但更新本地 Git remote refs；这是本地写入，不属于只读 CLI 覆盖，需对应用户授权和 Codex writes approval。"
     ),
     "merge_upstream_branch_fast_forward": (
         "把已 fetch 的 `upstream/branch_name` 快进合入当前同名本地分支；只有明确授权同步且确认基点适合时使用。不会自行 fetch 或创建 merge commit。"
@@ -105,7 +116,7 @@ TOOL_DESCRIPTIONS: dict[str, str] = {
     ),
     "audit_issue_pr_policy": (
         "联网只读检查用户指定的 GitHub Issue/PR 状态及可选 PR base/head、Issue 关闭引用；适合创建 PR 前按请求范围核验。至少给 issue_number 或 pr_number；expected_base/head 仅可与 pr_number 一起使用。Issue-only 与 PR-only 均有效。"
-        "只读审计本身会联网查询 GitHub；local_passed=true 表示审计符合本地策略并允许继续调用 OpenAI Decisions，local_passed=false 只阻止 OpenAI 请求，不表示此前没有查询 GitHub。顶层 passed 表示本地审计与 AI 决策均通过；同时检查 decision/ai_status/error_code。只查开放状态、显式期望的 base/head，并仅在同时给 issue_number 与 pr_number 时查 Closes/Fixes/Resolves 引用；不查 CI、labels、mergeability。只读，不修改 GitHub。"
+        "只读审计本身会联网查询 GitHub；local_passed=true 表示审计符合本地策略并允许继续调用 OpenAI Decisions，local_passed=false 只阻止 OpenAI 请求，不表示此前没有查询 GitHub。顶层 passed 表示本地审计与 AI 决策均通过；同时检查 decision/ai_status/error_code。只查开放状态、显式期望的 base/head，并仅在同时给 issue_number 与 pr_number 时查 Closes/Fixes/Resolves 引用；不查 CI、labels、mergeability。只读，不修改 GitHub。若需额外只读查询且本工具未覆盖，可按共享规则使用受限 gh CLI；REST `gh api` 须显式 `--method GET`，在已知 endpoint 路径中指明 owner/repo（不是 `--repo` 选项）；GraphQL 限已审阅 query。参数、副作用不明或写入操作不适用。"
     ),
     "cleanup_merged_pr_local_branch": (
         "PR 已合并后，将本地仓库切到 PR base、快进同步 origin/base，再删除本地 PR head；只用于用户明确授权的合并后清理，不会合并 PR 或删除远端分支。"
@@ -114,7 +125,7 @@ TOOL_DESCRIPTIONS: dict[str, str] = {
     ),
     "audit_repository_state": (
         "审计指定仓库的本地根路径、当前分支、status 行和 remote 名称，并尝试读取 GitHub 仓库身份/Fork/default branch；适合工作流开始时确认目标。repo_path 必须是绝对仓库根目录。"
-        "ok=true 只表示本地 `git status` 与 `git remote` 成功；GitHub 数据单独看 github/github_error，可能出现 ok=true 且 github=null、github_error 非空，不能据此声称 GitHub 已核验。remote URL 不返回。只读；会尝试联网 `gh repo view`，无写入。"
+        "ok=true 只表示本地 `git status` 与 `git remote` 成功；GitHub 数据单独看 github/github_error，可能出现 ok=true 且 github=null、github_error 非空，不能据此声称 GitHub 已核验。remote URL 不返回。只读；会尝试联网 `gh repo view`，无写入。若其他只读查询未被 MCP/已授权 Connector 覆盖，可在当前仓库范围执行受限只读 CLI；先核实范围并遵循共享只读边界。此工具失败、认证/网络问题或状态异常不构成绕过门禁的理由。"
     ),
     "list_github_issue_labels": (
         "联网只读列出指定 GitHub 仓库最多 100 个 Issue label，适合创建 Issue 前核对可用 label。repo_path 是用于认证/上下文的绝对仓库根目录；repo 可显式指定 owner/repo，否则按本地仓库解析。"
