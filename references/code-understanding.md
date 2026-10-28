@@ -20,14 +20,18 @@
 
 ## Monorepo 与独立子模块的 LSP 初始化
 
-Git 根目录和语言项目根目录可以不同。若根目录没有所需构建入口，或根级激活后子模块报项目/配置未找到、符号查询失败等错误，先检查根目录选择，不把增加所有语言服务器或反复激活仓库根目录当作修复。按 `serena-multilang-project-init` Skill 的逐项目核验流程执行；以下规则也适用于同一语言的多个独立项目。
+本节统一维护多语言 monorepo 的 Serena 初始化流程，无须加载其他初始化 Skill；同样适用于同一语言的多个独立项目。Git 根目录和语言项目根目录可以不同。若根目录没有所需构建入口，或根级激活后子模块报项目/配置未找到、符号查询失败等错误，先检查根目录选择，不把增加所有语言服务器或反复激活仓库根目录当作修复。
 
-1. **确定实际根目录。** 按本任务需要列出独立子项目的绝对路径、语言、构建/包管理清单及代表性源文件，例如 `services/api/pyproject.toml`、`web/tsconfig.json`、`sdk/go/go.mod`、`native/CMakeLists.txt`。结合 workspace 声明、项目引用及语言服务的根发现机制判断；清单位置是证据，不机械地把每个含清单的目录或任意 `src/` 都当成独立根。有效的根级 workspace 可以继续使用，但须证明目标子模块查询可用。
+1. **确定实际根目录。** 按本任务需要列出独立子项目的绝对路径、语言、构建/包管理清单及代表性源文件，例如 `services/api/pyproject.toml`、`web/tsconfig.json`、`sdk/go/go.mod`、`native/CMakeLists.txt`。清单应覆盖仓库根目录承载的主项目及相关嵌套模块/SDK，不能因根项目已激活而省略后者。结合 workspace 声明、项目引用及语言服务的根发现机制判断；清单位置是证据，不机械地把每个含清单的目录或任意 `src/` 都当成独立根。有效的根级 workspace 可以继续使用，但须证明目标子模块查询可用。
 2. **逐个激活或隐式创建。** 对需要独立根绑定的子项目，通过 MCP 调用 `activate_project(project=<子项目绝对根路径>, session=<当前说明返回的 id>)`，并以当前 Schema 为准。首次激活可隐式创建该子项目的 Serena 配置；核对返回路径及目标语言服务器。已有配置应复用；自动检测未启用正确语言时，报告缺口，在授权范围内通过可用配置入口处理，不能把错误语言的成功激活视为就绪，也不自行用 CLI 或手写配置绕过入口限制。
 3. **立即核验再切换。** 在当前子项目中，用已知文件执行 `get_symbols_overview` 或限定 `find_symbol`，确认能找到预期符号。`relative_path` 相对于当前 Serena 项目根目录：激活 `/workspace/repo/services/api` 后查询 `src/app.py`，不能继续传仓库根相对路径 `services/api/src/app.py`。记录根路径、目标语言服务、查询文件和结果；“激活成功”和“代表性符号查询成功”分别验收，不能只记录服务名称。
 4. **按项目串行处理。** 当前子项目核验完成后再激活下一个；返回先前模块时重新确认绑定。不要并行交替切换同一个 Serena 实例的活动项目。各 worktree 的子项目使用该 worktree 下的路径，不复用另一个 checkout 的绑定。
 5. **核对跨模块覆盖。** 子项目内查询通过只证明其局部上下文，不保证兄弟包引用完整。根级 LSP 配置的 `ls_workspace_folders` 用于选择项目内索引目录；`ls_additional_workspace_folders` 可向 LSP 注册其他 workspace，但不会让 Serena 索引那些目录以供符号搜索。二者都不能保证任意语言服务的跨包解析。需要跨模块影响分析时，结合实际语言的 workspace/项目引用和代表性跨包引用查询验收；例如 TypeScript 还依赖正确的 project references。新增或修改 workspace 配置须在授权范围内执行，不自动改动构建配置。
-6. **区分后端与失败处理。** 上述独立子项目根绑定面向 LSP 后端；JetBrains 后端要求 Serena 根目录与 IDE 打开的项目根目录一致，多模块通常由 IDE 中的同一 monorepo 项目承载，不能只切 Serena 子目录而保留不匹配的 IDE 根目录。固定单项目 MCP 无法切换到目标子项目时，说明需要绑定该根路径的 MCP 实例；当前无此能力则停止相关 LSP 初始化，不声称已初始化。普通代码读取仍可按降级规则进行。
+6. **区分后端与失败处理。** 上述独立子项目根绑定面向 LSP 后端；JetBrains 后端要求 Serena 根目录与 IDE 打开的项目根目录一致，多模块通常由 IDE 中的同一 monorepo 项目承载，不能只切 Serena 子目录而保留不匹配的 IDE 根目录。查询失败时，记录根路径、文件归属、目标语言服务及依赖可用性，报告具体未通过项，不安装依赖或悄悄退回仓库根目录宣称成功。固定单项目 MCP 无法切换到目标子项目时，核对启动绑定的 `--project`，说明需要绑定该根路径的 MCP 实例；当前无此能力则停止相关 LSP 初始化，不声称已初始化。普通代码读取仍可按降级规则进行。
+
+子项目配置默认位于其 `.serena/project.yml`，可配置语言服务、后端、编码、忽略规则和 workspace；机器专属覆盖可用默认被 Git 忽略的 `project.local.yml`。复用现有设置，不为逐模块初始化修改全局配置或覆盖已有配置。大型 LSP 项目可在适用授权和入口允许时预先索引以降低首次查询等待，后续索引随文件变化更新；JetBrains 的索引由 IDE 管理。预索引是可选优化，不是初始化或符号查询验收的替代。
+
+若实际提供 `query_project`，可在目标项目已正确登记、相应能力已启用时查询其他项目；官方通过 `query-projects` mode 提供此功能，LSP 符号查询还依赖 Serena Project Server。仅在当前实例确实提供这些能力时使用，不为本流程自行启动服务或切换 mode，也不把跨项目查询作为根绑定和代表性查询核验的替代。
 
 仅初始化 LSP 不包含 onboarding 或项目记忆生成。子项目绑定也不改变 Git 操作范围：所有 dev-workflow 的 repo-bound 审计、暂存、提交、推送仍使用准确的 Git 仓库/worktree 根目录，不把子项目路径传作 `repo_path`。Serena Memory 随所激活项目切换；仓库级会话摘要仍遵循其独立存储规约，不因一次子项目查询擅自迁移或复制。
 
@@ -93,4 +97,4 @@ Git 根目录和语言项目根目录可以不同。若根目录没有所需构�
 - 源码 `src/serena/agent.py` 的 `create_system_prompt`、`get_project_activation_message`、`activate_project_from_path_or_name`，以及 `src/serena/tools/config_tools.py` 的 `ActivateProjectTool.apply`：会话 id、项目激活与 onboarding 提示。
 - 源码 `src/serena/tools/workflow_tools.py` 的 `OnboardingTool.apply`、`src/serena/repl/api/mem_api.py` 的 `MemoryApi.onboarding`，以及 `src/serena/resources/config/prompt_templates/system_prompt.yml`、`src/serena/resources/config/modes/editing.yml`：调查提示、维护记忆与符号操作边界。
 - 本地文档根目录 `/Users/johannyellow/.agents/skills/libs-local-docs-skill/docs/serena/` 中的 `docs/01-about/035_tools.md`、`docs/02-usage/040_workflow.md`、`docs/02-usage/045_memories.md`、`docs/02-usage/050_configuration.md` 和 `docs/03-special-guides/cpp_setup.md`：接口、项目、Memory、工具配置和 C/C++ 条件。更新后的文档仍有“默认执行 onboarding”的概括，应结合上述源码的实际询问流程理解。
-- 同一缓存中的 `src/serena/resources/project.template.yml`、`docs/02-usage/025_jetbrains_plugin.md` 及 `050_configuration.md` 的 TypeScript monorepo 章节：索引与附加 workspace 的区别、IDE 根目录匹配和跨包引用条件。子模块初始化步骤另核对本机 `/Users/johannyellow/.agents/skills/serena-multilang-project-init/SKILL.md`；参数名以实际 MCP Schema 的 `session` 为准。
+- 同一缓存中的 `src/serena/resources/project.template.yml`、`docs/02-usage/025_jetbrains_plugin.md`、`docs/02-usage/040_workflow.md` 的跨项目查询章节及 `050_configuration.md` 的 TypeScript monorepo 章节：索引与附加 workspace 的区别、IDE 根目录匹配、跨项目能力前置条件和跨包引用条件；参数名以实际 MCP Schema 的 `session` 为准。

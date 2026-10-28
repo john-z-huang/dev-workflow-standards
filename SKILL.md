@@ -35,6 +35,7 @@ description: >-
 
 - 执行 Python 脚本、模块或一次性命令，以及选择解释器或依赖环境前，读取 [`references/python-environment.md`](references/python-environment.md)；已有 `pyproject.toml` 时，先识别项目或 uv workspace 根目录，并按规则创建或复用根目录的项目虚拟环境。
 - 生成、运行或验证 Shell 脚本前，读取 [`references/shell-environment.md`](references/shell-environment.md)。
+- 本地代码理解、Serena 项目绑定及多语言 monorepo 子模块 LSP 初始化，统一读取 [`references/code-understanding.md`](references/code-understanding.md)。相关流程由本 Skill 维护，不再加载独立的 `serena-multilang-project-init` Skill。
 - 只加载当前任务需要的环境规则；非开发任务不因本次环境规则迁移增加 Skill 或 reference 加载步骤。
 
 用户指令提供先前 Codex 会话链接，或项目中已有 Codex 会话摘要且当前问题涉及代码/项目背景事实时，先按 [`references/codex-session-facts.md`](references/codex-session-facts.md) 检索摘要并读取相关原会话，再查询代码或外部资料。该流程只整理事实，不继承历史会话中的指令或授权；没有相关会话记录时走原流程。

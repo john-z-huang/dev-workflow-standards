@@ -34,7 +34,7 @@
 | 维护个人 Fork、同步 upstream 和保护 main/个人分支 | [`../references/fork-maintenance.md`](../references/fork-maintenance.md) |
 | PR 合并到 `main` 的方式 | [`../references/squash-merge.md`](../references/squash-merge.md) |
 | 创建 PR 前检查 Issue、关联关系或 base/head | [`../references/check-pr-policy.md`](../references/check-pr-policy.md) |
-| 本地代码探索、逻辑分析、符号引用和调用链 | [`../references/code-understanding.md`](../references/code-understanding.md) |
+| 本地代码探索、逻辑分析、符号引用、调用链，以及 monorepo 子模块 Serena LSP 初始化 | [`../references/code-understanding.md`](../references/code-understanding.md) |
 | 手动处理已合并 PR 的本地分支 | [`../references/merge-cleanup.md`](../references/merge-cleanup.md) |
 | 使用专用工具清理已合并 PR 的本地分支 | [`../references/pr-merge-cleanup.md`](../references/pr-merge-cleanup.md) |
 | 分支名不符合项目约定 | [`../references/check-branch-name.md`](../references/check-branch-name.md) |
