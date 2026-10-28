@@ -27,11 +27,12 @@ SERVER_INSTRUCTIONS = """
 
 1. `audit_repository_state` 核对指定仓库的本地状态和 remote 名称；随后按需使用 `list_repository_worktrees`、`check_branch_names`、`capture_untracked_file_manifest`、`check_staged_changes`。审计的 `ok=true` 仅表示本地 Git status/remotes 读取成功；`github` 仍可能为 null 且同时有 `github_error`，不能当作 GitHub 核验成功。
 2. 只有用户明确要求使用或创建 worktree 时才使用 worktree 流程：先 `create_repository_worktree`，然后如确需保留源仓库未跟踪文件，再 `capture_untracked_file_manifest` 并 `copy_untracked_files_to_worktree`。复制后检查结果再继续；失败返回也可能已部分复制，`copied` 只列确认完成项，工具不回滚，先检查目标，禁止盲目重跑覆盖。
-3. 修改本地分支前核对状态；同步 upstream 时先 `fetch_upstream_branch`，再按需要调用 `merge_upstream_branch_fast_forward`。`pull_origin_branch_fast_forward` 和 `fetch_upstream_branch` 会访问 remote 网络。`rebase_repository_branch` 改写本地历史；remove 会删除 worktree 目录；这些操作都要求对应授权。
-4. 提交前先 `check_branch_names`、`check_commit_message`，再精确 `stage_repository_paths`；暂存后、提交前调用 `check_staged_changes` 并核验 staged paths，才考虑 `commit_repository_changes`。commit 会运行正常 Git hooks（可能执行仓库配置的检查）；工具不绕过 hooks。
-5. GitHub 流程可先 `list_github_issue_labels` 与 `audit_issue_pr_policy`，再按授权创建 Issue、推送分支、创建 PR、合并。创建工具若返回 `created=true, ok=false`，资源可能已创建但回读未确认；先人工/只读回读，不要盲目重试。合并后可用 `cleanup_merged_pr_local_branch`；它会联网核验 PR 并同步 base，只有合并前记录的 head OID 与本地分支 OID 精确相同才允许 `git branch -D`，否则不强制删除。
-6. Codex session fact helpers 只处理调用方提供的元数据和文本：先由宿主读取、核实原会话，再排序或准备摘要 payload。它们不读取宿主 history，不调用 Serena，不写 Memory；`prepare_codex_session_memory` 的 payload 不是授权。
-7. 六个可联网 OpenAI 入口分两组：`check_branch_names`、`check_commit_message`、`audit_issue_pr_policy` 在本地硬检查通过后调用 Decisions；`decide_skill_workflow`、`decide_codex_session_action` 调用 Decisions；`generate_skill_content` 调用 Responses.parse。三个检查工具的 `decision` 仅为 `compliant`、`requires_fix`、`insufficient_evidence`；前三个只能把已检查事实交给模型作补充判断；后三个分别给出路由建议、历史动作建议、候选文本。生成支持 issue、pr、commit_message、plan、handoff、session_summary 六种 kind。只有进程环境中的 `OPENAI_API_KEY` 与 `OPENAI_BASE_URL` 会在每次请求时读取，工具参数不能指定凭据、端点或模型，固定模型为 `gpt-6-luna`。缺配置、服务拒绝、refusal、结构无效或输出不完整均是失败/需复核，不是通过；候选和建议都要 Agent 审查，不会授予 Git 或 Memory 权限。
+3. 选择分支操作时：`switch_repository_branch` 用于切换到已经存在的本地分支；`create_repository_branch` 用于在当前 HEAD commit 上新建分支并让当前 checkout 指向它；`create_repository_worktree` 用于新建另一个 checkout 并指定已核验的本地 base。`create_repository_branch` 保留 staged、unstaged、同文件混合修改和 untracked 文件；事务使用 `option no-deref` 更新 HEAD，保留旧分支的原始直接引用，不改工作区文件或 index。`expected_head_oid` 省略/null 时由工具捕获当前 HEAD，提供时只比较 HEAD commit OID；若 HEAD 符号目标变成另一个同 OID target 仍会接受。无效、unborn/non-commit HEAD、分支冲突、locked worktree、未合并 index、进行中的 merge/rebase/sequencer、Git 环境重定向变量或可执行 `reference-transaction` hook 会在写入前拒绝。能力探测排队后 abort，不提交 ref；仅当实际事务成功并回读确认 HEAD 与新分支同 OID、HEAD 指向新分支时 `ok=true`。`created=true` 可与回读失败并存；`created=null`/`needs_review=true` 表示事务失败后先检查 refs，不能直接盲目重试。此工具本地只写新分支 ref 和 HEAD（Git 可能维护 reflog），不 checkout、不触碰 index、不联网、不调用 OpenAI。
+4. 修改本地分支前核对状态；同步 upstream 时先 `fetch_upstream_branch`，再按需要调用 `merge_upstream_branch_fast_forward`。`pull_origin_branch_fast_forward` 和 `fetch_upstream_branch` 会访问 remote 网络。`rebase_repository_branch` 改写本地历史；remove 会删除 worktree 目录；这些操作都要求对应授权。
+5. 提交前先 `check_branch_names`、`check_commit_message`，再精确 `stage_repository_paths`；暂存后、提交前调用 `check_staged_changes` 并核验 staged paths，才考虑 `commit_repository_changes`。commit 会运行正常 Git hooks（可能执行仓库配置的检查）；工具不绕过 hooks。
+6. GitHub 流程可先 `list_github_issue_labels` 与 `audit_issue_pr_policy`，再按授权创建 Issue、推送分支、创建 PR、合并。创建工具若返回 `created=true, ok=false`，资源可能已创建但回读未确认；先人工/只读回读，不要盲目重试。合并后可用 `cleanup_merged_pr_local_branch`；它会联网核验 PR 并同步 base，只有合并前记录的 head OID 与本地分支 OID 精确相同才允许 `git branch -D`，否则不强制删除。
+7. Codex session fact helpers 只处理调用方提供的元数据和文本：先由宿主读取、核实原会话，再排序或准备摘要 payload。它们不读取宿主 history，不调用 Serena，不写 Memory；`prepare_codex_session_memory` 的 payload 不是授权。
+8. 六个可联网 OpenAI 入口分两组：`check_branch_names`、`check_commit_message`、`audit_issue_pr_policy` 在本地硬检查通过后调用 Decisions；`decide_skill_workflow`、`decide_codex_session_action` 调用 Decisions；`generate_skill_content` 调用 Responses.parse。三个检查工具的 `decision` 仅为 `compliant`、`requires_fix`、`insufficient_evidence`；前三个只能把已检查事实交给模型作补充判断；后三个分别给出路由建议、历史动作建议、候选文本。生成支持 issue、pr、commit_message、plan、handoff、session_summary 六种 kind。只有进程环境中的 `OPENAI_API_KEY` 与 `OPENAI_BASE_URL` 会在每次请求时读取，工具参数不能指定凭据、端点或模型，固定模型为 `gpt-6-luna`。缺配置、服务拒绝、refusal、结构无效或输出不完整均是失败/需复核，不是通过；候选和建议都要 Agent 审查，不会授予 Git 或 Memory 权限。
 
 所有响应按各工具说明的采用条件处理：`ok`/`passed`/`created`/`committed`/`merged` 有不同含义，不能只看其中一个字段；部分动作失败后先读回状态，再决定下一步。错误边界、网络访问和副作用以具体工具描述为准。
 """.strip()
@@ -71,6 +72,11 @@ TOOL_DESCRIPTIONS: dict[str, str] = {
         "在同一 worktree 切换到已存在的本地 branch_name；用于用户明确要求切换且目标状态已核实的场景，不会自动创建或跟踪 remote 分支。"
         "repo_path 为绝对仓库根目录；仅允许当前仓库策略认可的本地名字，且已跟踪暂存/未暂存更改会拒绝（未跟踪文件可以保留）。ok=true 表示切换成功。"
         "会改变本地 worktree 检出分支，不联网；需用户明确授权和 Codex writes approval。"
+    ),
+    "create_repository_branch": (
+        "在当前 worktree 的现有 HEAD 提交上原子创建本地工作分支并将 HEAD 指向它；适合用户明确要求新建当前点分支且保留当前工作区时。与 switch_repository_branch 不同，本工具不切换到既有分支；与 create_repository_worktree 不同，本工具不创建第二个目录，也不要求选择 base。"
+        "repo_path 必须是绝对 Git 根目录；branch_name 必须通过项目分支策略和 git check-ref-format，不能为 main/master 或任何已存在/冲突的本地引用。expected_head_oid 省略/null 时由工具捕获当前 HEAD；提供非null值时须为40/64位 hex 且与当前HEAD解析出的commit OID一致，空字符串无效。OID是唯一并发条件：HEAD改指向同OID的另一符号目标仍可通过。要求HEAD是commit、worktree未锁定、index无冲突、无merge/rebase等操作；存在可执行reference-transaction hook或Git环境重定向时在写入前拒绝。Git须支持全局--no-lazy-fetch、update-ref stdin事务及option no-deref/symref-update旧OID条件；不支持时安全失败，不移除保护选项重试。缺失的promisor对象不会隐式取回。"
+        "允许暂存、未暂存、同文件混合修改和未跟踪文件。成功结果需 `ok=true`、`created=true`，并核对 `start_head_oid`；失败看 `error_code`/`error`。事务失败时 `created=null` 且 `needs_review=true` 表示先核对 refs 再决定重试；事务已成功但回读失败时 `created=true`、`ok=false`，不得盲目重试。只写本地 refs、HEAD及Git可能维护的reflog，不checkout、不改文件/index、不联网、不调用OpenAI。需要用户明确授权和 Codex writes approval。最小示例：{\"repo_path\":\"/workspace/repo\",\"branch_name\":\"feat/synthetic\",\"expected_head_oid\":null}。"
     ),
     "pull_origin_branch_fast_forward": (
         "将当前已检出的同名分支通过 `git pull --ff-only origin branch_name` 快进同步；适合明确要求从 origin 更新，不能用于非快进合并或其他分支。"
@@ -204,6 +210,11 @@ PARAMETER_DESCRIPTIONS: dict[str, dict[str, str]] = {
         "repo_path": "要切换分支的 worktree 仓库绝对根路径。",
         "branch_name": "已存在且已核实的本地目标分支名；工具不会自动创建或跟踪远端分支。",
     },
+    "create_repository_branch": {
+        "repo_path": "目标 Git 仓库或 linked worktree 的绝对根目录；必须精确指向 Git 根，不能传子目录。支持含空格或非 ASCII 字符的路径。",
+        "branch_name": "要创建的本地工作分支名；须通过项目 branch_errors 策略和 git check-ref-format，禁止 main/master、既有分支、符号引用及文件/目录前缀冲突；工具不会选择任意 base。",
+        "expected_head_oid": "可选的 HEAD commit OID；省略或 null 表示由工具捕获调用时HEAD。提供非null值时必须是40/64位十六进制且与当前HEAD OID匹配，空字符串无效。它只约束OID，不约束HEAD符号目标名称；同OID换target可接受。",
+    },
     "pull_origin_branch_fast_forward": {
         "repo_path": "当前待同步 worktree 的绝对仓库根路径。",
         "branch_name": "必须与当前检出的分支同名；固定从 origin 拉取且只允许快进。",
@@ -319,7 +330,7 @@ PARAMETER_DESCRIPTIONS: dict[str, dict[str, str]] = {
 }
 
 
-assert len(TOOL_DESCRIPTIONS) == 31
+assert len(TOOL_DESCRIPTIONS) == 32
 assert set(TOOL_DESCRIPTIONS) == set(PARAMETER_DESCRIPTIONS)
 
 

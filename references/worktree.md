@@ -8,6 +8,12 @@
 - 原始工作区用于基线同步、查看和管理 worktree；代码、测试、配置、文档、暂存与提交都在需求 worktree 完成。
 - worktree 不授权 GitHub 写入或提交。保留原始工作区现有文件和用户改动。
 
+## 已有 checkout 原地建分支
+
+当前 checkout（包括宿主已经准备好的 detached worktree）仅需从当前 HEAD 建立工作分支时，走普通开发工作流，使用 `create_repository_branch`；无需再创建 worktree。先审计该 checkout 的准确根目录，再按授权传入 `repo_path`、新 `branch_name` 和可选 `expected_head_oid`，核对返回的分支及 OID。
+
+该工具保留已有文件和 index，只新增分支、更新 HEAD 及对应 reflog。它不提供任意起点、同步基线、复制文件或配置 tracking 的能力；也不能代替下述“新建另一个 worktree”所需的同步门禁。锁定、未完成 merge/rebase、引用冲突、有效的 reference-transaction Hook 或不支持的 Git 事务语法均须先处理，工具不会强制继续或自动提权。详细边界见 [工具目录](mcp-tools.md#原地创建工作分支)。
+
 ## 创建前的同步门禁
 
 先用 `audit_repository_state` 检查准确仓库根目录、分支、tracked 状态、remote、默认分支和 Fork parent。已跟踪改动妨碍切换或同步时，先停止；不得暂存、清理、移动或覆盖用户内容。
@@ -31,7 +37,7 @@
 2. 用 `create_repository_worktree` 传入原仓库路径、目标绝对路径、新分支和已同步的本地基线。它拒绝已存在的路径/分支以及在源仓库目录内创建。
 3. 按上一节复制允许携带的未跟踪内容；然后只在该 worktree 中实现和验证。
 
-若 Fork 的个人维护分支缺失，先停止：当前 MCP 没有首次添加 `upstream`、创建或设置个人分支的工具。
+若 Fork 的个人维护分支缺失，先停止并核对初始化方案：`create_repository_branch` 只允许以当前 HEAD 原地建分支，不能代替首次添加 `upstream`、确认维护基线或配置 tracking；这些初始化操作仍未完整封装。
 
 ## 并行工作与串行交付
 
