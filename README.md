@@ -72,6 +72,8 @@ uv tool uninstall dev-workflow-standards-mcp
 
 使用 [`SKILL.md`](SKILL.md) 时按 [`workflows/index.md`](workflows/index.md) 选择工作流，再按 [`references/mcp-tools.md`](references/mcp-tools.md) 调用对应工具。所有仓库操作都要传入本次目标项目的绝对 `repo_path`；服务器不会把启动时的目录当作目标仓库。
 
+Python 执行和依赖环境任务按需读取 [`references/python-environment.md`](references/python-environment.md)，Shell 脚本开发和验证按需读取 [`references/shell-environment.md`](references/shell-environment.md)。独立脚本无需先进入 Git 工作流；非开发任务不增加环境规则加载步骤。
+
 Git/GitHub 写操作必须先满足工作流中的用户授权和安全前置条件。服务只接受固定领域参数，不提供任意 shell、git、gh 或项目测试命令。工具未覆盖的操作要停止并报告，不要改用手写命令绕过。
 
 ### MCP 客户端可见的使用说明
