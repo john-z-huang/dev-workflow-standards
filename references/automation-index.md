@@ -1,6 +1,6 @@
 # 自动化与兼容资产
 
-交互式 Skill 工作流的固定 Git/GitHub 操作使用 [`mcp-tools.md`](mcp-tools.md) 中的专用 MCP 工具。下面的脚本仍保留在仓库，供现有 Hook 或兼容集成使用；不要把这些脚本当成 Skill 工作流的命令执行后备方案。
+交互式 Skill 工作流的固定写操作和强制 Git/GitHub 门禁使用 [`mcp-tools.md`](mcp-tools.md) 中的专用工具；未覆盖的补充查询按 [`read-only-queries.md`](read-only-queries.md) 处理。下面的脚本仍保留在仓库，供现有 Hook 或兼容集成使用；只读豁免不授权用这些脚本替代门禁、写工具或绕过工具失败。
 
 | 兼容资产 | 用途 / 对应 MCP 工具 |
 |---|---|

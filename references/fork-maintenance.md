@@ -28,11 +28,11 @@ upstream/main → origin/main → personal-<project> → feat/fix/docs/... → P
 
 - 需求提交和推送只在需求分支进行；`push_issue_branch_to_origin` 的固定规则拒绝把需求分支推入主分支。
 - 需求 PR 显式以个人维护分支为 base，通过 `create_github_pull_request` 提交并核验。
-- `main` 和个人维护分支应禁止删除及强推；个人维护分支应要求通过 PR。保护规则的创建/修改/回读目前未封装为 MCP 工具，必须报告未覆盖能力，不得把下方旧命令模式改由通用 shell/gh runner 执行。
+- `main` 和个人维护分支应禁止删除及强推；个人维护分支应要求通过 PR。保护规则尚未封装为本服务 MCP 工具；回读可按 [`read-only-queries.md`](read-only-queries.md) 使用已授权 Connector 或显式 GET CLI。创建/修改仍报告缺少专用写能力，不改用通用 shell/gh runner 执行；回读权限失败不能绕过或当作无规则。
 
 ## 发现拓扑异常
 
 - `origin/main` 含个人需求提交时，先核验提交归属；不能继续把它当作上游镜像。
 - `merge_upstream_branch_fast_forward` 失败表示发生分叉或基线不符；保留状态并检查差异，不改写公开历史。
 - 个人维护分支含未合并需求时，确认 PR base/head；不要直接 rebase 已公开分支或裸强推。
-- 更改默认分支、规则集或保护策略需要用户明确授权；目前规则集操作不受 MCP 支持，故在此停止。
+- 更改默认分支、规则集或保护策略需要用户明确授权和执行层审批；目前相应写操作不受 MCP 支持，故在写入前停止。只读回读按前述规约处理。

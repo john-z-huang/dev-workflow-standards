@@ -1,6 +1,6 @@
 # 普通开发工作流
 
-适用：默认直接在当前工作区开发，无论仓库是否有 remote、是否需要 GitHub 交付或是否需要分支。只有用户在指令中明确要求 worktree 时，才改读 [`worktree-development.md`](worktree-development.md)。固定 Git/GitHub 操作使用 [`mcp-tools.md`](../references/mcp-tools.md) 中的专用工具。
+适用：默认直接在当前工作区开发，无论仓库是否有 remote、是否需要 GitHub 交付或是否需要分支。只有用户在指令中明确要求 worktree 时，才改读 [`worktree-development.md`](worktree-development.md)。固定写操作和强制 Git/GitHub 门禁使用 [`mcp-tools.md`](../references/mcp-tools.md) 中的专用工具；补充只读查询按 [`read-only-queries.md`](../references/read-only-queries.md) 处理。
 
 ## 队列
 

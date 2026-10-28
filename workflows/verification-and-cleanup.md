@@ -1,6 +1,6 @@
 # 验证与清理工作流
 
-测试通过不等于范围、GitHub 策略或合并后状态通过。按队列只执行适用步骤。固定 Git 检查调用 [`mcp-tools.md`](../references/mcp-tools.md) 点名的工具；项目测试仍使用项目自己的测试入口。
+测试通过不等于范围、GitHub 策略或合并后状态通过。按队列只执行适用步骤。强制 Git 检查调用 [`mcp-tools.md`](../references/mcp-tools.md) 点名的工具；补充只读查询按 [`read-only-queries.md`](../references/read-only-queries.md) 处理，不替代门禁。项目测试仍使用项目自己的测试入口。
 
 ## 队列
 
