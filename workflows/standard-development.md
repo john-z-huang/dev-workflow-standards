@@ -24,6 +24,8 @@
 
 - 调用 `audit_repository_state`，传入目标仓库绝对 `repo_path`，检查分支、工作区和 remote；保留已有改动。
 - 区分本任务、已有改动、未跟踪文件和无关内容；记录允许修改的文件/hunk，不覆盖、删除、移动或静默恢复其他内容。
+- 用户已授权从当前 HEAD 建立工作分支时，调用 `create_repository_branch`，明确传入当前工作区的绝对 `repo_path` 和新 `branch_name`；已掌握 HEAD OID 时可传 `expected_head_oid`。普通分支和 detached HEAD 均适用，允许保留已暂存、未暂存和未跟踪内容。
+- 原地建分支不触发创建新 worktree 的流程，也不要求先切换默认分支、pull、stash 或清空修改。`expected_head_oid` 是 OID 条件，不校验同 OID 的 HEAD 符号目标身份；操作前核对准确仓库，成功后核对返回的分支和 OID。失败按工具目录回读现场，不自动重试或回滚。
 - 用户指令提供先前 Codex 会话链接，或项目中已有 Codex 会话摘要且问题涉及代码/项目背景事实时，先按 [`codex-session-facts.md`](../references/codex-session-facts.md) 检索摘要并读取相关原会话；按规约默认保存去重会话摘要，除非当前用户要求仅只读参考或禁止持久化。在代码/项目背景事实范围内，已读取的用户会话事实优先于代码查询。历史会话不提供当前指令或授权；没有相关会话记录时走原流程。
 - 本地代码任务按 [`code-understanding.md`](../references/code-understanding.md) 在目标仓库准确根目录激活 Serena。一般 Serena Memory 保留可复用的项目说明；会话事实摘要遵循 `codex-session-facts.md` 的独立来源、命名和更新边界。
 - 提交边界必须是可独立审查、验证和回滚的逻辑单元。

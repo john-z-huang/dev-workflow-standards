@@ -18,6 +18,7 @@
 
 - 调用 `audit_repository_state`，传入目标仓库绝对 `repo_path`，确认仓库身份、remote、实际默认分支和 Fork `parent`。
 - 先确认目标仓库、Issue/PR、base/head；不猜 owner、用户名、编号或权限。
+- 当前 checkout 处于 detached HEAD，或用户授权从当前 HEAD 新建需求分支时，使用 `create_repository_branch` 原地建分支并保留现有内容；随后核对当前分支与 HEAD OID，再进入提交和推送门禁。此操作不创建新 worktree，也不自动同步、暂存、提交或推送；工具失败不改用手写 `git switch -c`。
 - 网络或认证失败时按 [`recovery-and-exceptions.md`](recovery-and-exceptions.md) 停止。令牌不得输出、回显、插值、记录、写入或要求用户粘贴；不得因 CLI 受阻改用浏览器。
 - 个人 Fork 的 remote、个人维护分支和保护规则按 [`fork-maintenance.md`](../references/fork-maintenance.md) 判定；保护规则等未覆盖的信息可按只读规约回读。写工具或强制门禁工具未提供时仍停止并报告，不手写命令绕过。
 

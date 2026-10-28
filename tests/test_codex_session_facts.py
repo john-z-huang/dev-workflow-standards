@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 import re
 import inspect
+import subprocess
+import tempfile
 import unittest
 from unittest import IsolatedAsyncioTestCase
 from importlib.resources import files
@@ -372,12 +374,12 @@ class MemoryPreparationTests(unittest.TestCase):
 class MCPRegistrationTests(IsolatedAsyncioTestCase):
     A = "00000000-0000-4000-8000-000000000005"
 
-    async def test_all_31_tools_registered_with_read_only_schemas(self) -> None:
+    async def test_all_32_tools_registered_with_described_schemas(self) -> None:
         self.assertIn("本地开发工作流 MCP 服务", complete_server.description)
         tools = await complete_server.list_tools()
-        self.assertEqual(len(tools), 31)
+        self.assertEqual(len(tools), 32)
         by_name = {tool.name: tool for tool in tools}
-        self.assertEqual(len(by_name), 31)
+        self.assertEqual(len(by_name), 32)
         for tool in tools:
             self.assertTrue(tool.description, tool.name)
 
@@ -426,6 +428,16 @@ class MCPRegistrationTests(IsolatedAsyncioTestCase):
         tools = {tool.name: tool for tool in await complete_server.list_tools()}
         for name in ("pull_origin_branch_fast_forward", "fetch_upstream_branch"):
             self.assertTrue(tools[name].annotations.open_world_hint)
+
+        branch_tool = tools["create_repository_branch"]
+        self.assertFalse(branch_tool.annotations.read_only_hint)
+        self.assertFalse(branch_tool.annotations.destructive_hint)
+        self.assertFalse(branch_tool.annotations.idempotent_hint)
+        self.assertFalse(branch_tool.annotations.open_world_hint)
+        self.assertIn("expected_head_oid", branch_tool.input_schema["properties"])
+        self.assertIn("null", str(branch_tool.input_schema["properties"]["expected_head_oid"]))
+        self.assertTrue(branch_tool.input_schema["properties"]["expected_head_oid"].get("description"))
+        self.assertIn("OID是唯一并发条件", branch_tool.description)
 
         descriptions = {
             "copy_untracked_files_to_worktree": ("结构示例：",),
@@ -478,6 +490,27 @@ class MCPRegistrationTests(IsolatedAsyncioTestCase):
             }
             input_model = create_model(f"{target.__name__}Input", **fields)
             input_model.model_validate(example)
+
+    async def test_create_repository_branch_via_mcp_call_tool(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="mcp branch tool 日本語 ") as temp:
+            repo = Path(temp) / "repo with spaces"
+            repo.mkdir()
+            subprocess.run(["git", "init", "-q"], cwd=repo, check=True)
+            subprocess.run(["git", "config", "user.name", "Synthetic"], cwd=repo, check=True)
+            subprocess.run(["git", "config", "user.email", "fixture@example.invalid"], cwd=repo, check=True)
+            (repo / "tracked").write_bytes(b"baseline\n")
+            subprocess.run(["git", "add", "tracked"], cwd=repo, check=True)
+            subprocess.run(["git", "commit", "-qm", "baseline"], cwd=repo, check=True)
+            head_oid = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, check=True, capture_output=True, text=True).stdout.strip()
+            raw = await complete_server.call_tool(
+                "create_repository_branch",
+                {"repo_path": str(repo), "branch_name": "feat/mcp-call", "expected_head_oid": head_oid},
+            )
+            self.assertFalse(raw.is_error)
+            data = raw.structured_content or json.loads(raw.content[0].text)
+            self.assertTrue(data["ok"], data)
+            self.assertTrue(data["created"])
+            self.assertEqual(data["start_head_oid"], head_oid)
 
     async def test_real_tool_calls_return_expected_guidance_order_and_memory_payload(self) -> None:
         guidance_result = await complete_server.call_tool("get_codex_session_summary_guidance", {})
