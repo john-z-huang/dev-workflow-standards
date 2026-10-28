@@ -1,10 +1,10 @@
 # GitHub 操作策略
 
-固定 GitHub CLI 操作使用 [`mcp-tools.md`](mcp-tools.md) 中的专用 MCP 工具，或当前已授权的 GitHub Connector/App。禁止浏览器和浏览器自动化。服务器调用本机 `gh` 身份，不收集、不输出令牌。
+固定写操作和强制 GitHub 门禁使用 [`mcp-tools.md`](mcp-tools.md) 中规定的工具；一般查询优先用专用 MCP 或当前已授权的 GitHub Connector/App，未覆盖的只读信息按 [`read-only-queries.md`](read-only-queries.md) 使用 CLI。禁止浏览器和浏览器自动化。服务器调用本机 `gh` 身份，不收集、不输出令牌。
 
 ## 授权、网络与身份
 
-- 每次外部写操作都需要用户授权。Skill 加载、Codex 工具可用或工具注解均不自动授权。
+- 每次外部写操作都须有覆盖该操作的用户授权并满足执行层审批；已有授权在原范围内持续有效，无须重复索取。Skill 加载、工具可用或注解均不自动授权。
 - GitHub 网络/认证问题按恢复流程处理；不得因代理/API 不通直接判定登录凭据失效，也不得要求用户粘贴 token。
 - `GH_TOKEN` 与其他凭据不得打印、回显、插值、记录或写入文件/参数/错误报告。出错时只保留非敏感摘要。
 - 目标仓库、Issue/PR 编号、assignee 和 base/head 必须来自当前任务或工具返回值，不猜测账号/权限。
@@ -31,4 +31,4 @@
 
 ## 能力边界
 
-MCP 不提供 branch protection/rulesets 的增删改查、首次 upstream URL 配置或 GitHub 账号修复工具。遇到这些动作时保留现场并报告；不要用旧文档中的原始命令或通用命令执行器绕过。
+MCP 不提供 branch protection/rulesets 的增删改查、首次 upstream URL 配置或 GitHub 账号修复工具。保护规则回读等未覆盖的信息查询可按只读规约使用已授权 Connector 或显式 GET CLI；权限不足等失败仍须停止对应查询，不能把失败解释为无规则。未封装的写操作保留现场并报告，不使用原始命令或通用执行器绕过。

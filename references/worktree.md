@@ -1,6 +1,6 @@
 # Git Worktree 开发与交付
 
-仅当用户明确要求 worktree 时使用。Git 仓库、remote、GitHub 交付或并行任务本身不触发该模式。固定 Git 操作使用 [`mcp-tools.md`](mcp-tools.md) 中的专用工具。
+仅当用户明确要求 worktree 时使用。Git 仓库、remote、GitHub 交付或并行任务本身不触发该模式。固定写操作和强制 Git 门禁使用 [`mcp-tools.md`](mcp-tools.md) 中的专用工具；补充只读查询按 [`read-only-queries.md`](read-only-queries.md) 处理，不替代创建前同步门禁。
 
 ## 工作区边界
 
