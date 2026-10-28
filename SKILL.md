@@ -32,7 +32,7 @@ description: >-
 
 由 [`workflows/index.md`](workflows/index.md) 决定工作流与参考文档。只有在处理固定 Git/GitHub 操作时读取 [`references/mcp-tools.md`](references/mcp-tools.md) 查找工具名和参数。
 
-- 执行 Python 脚本、模块或一次性命令，以及选择解释器或依赖环境前，读取 [`references/python-environment.md`](references/python-environment.md)。
+- 执行 Python 脚本、模块或一次性命令，以及选择解释器或依赖环境前，读取 [`references/python-environment.md`](references/python-environment.md)；已有 `pyproject.toml` 时，先识别项目或 uv workspace 根目录，并按规则创建或复用根目录的项目虚拟环境。
 - 生成、运行或验证 Shell 脚本前，读取 [`references/shell-environment.md`](references/shell-environment.md)。
 - 只加载当前任务需要的环境规则；非开发任务不因本次环境规则迁移增加 Skill 或 reference 加载步骤。
 
