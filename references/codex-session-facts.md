@@ -37,7 +37,7 @@
 Python MCP Server 提供只读助手：`get_codex_session_summary_guidance` 返回下述默认问题和模板并支持用户自定义；`order_codex_session_sources` 处理来源去重和创建时间排序；`prepare_codex_session_memory` 校验并生成 Memory 写入参数。签名和调用顺序见 [`mcp-tools.md`](mcp-tools.md)。助手不读取原会话、不执行 Serena 写入，也不能代替 Code Agent 核对原文或判定当前用户授权。
 
 - 项目会话摘要默认放在 `.serena/memories/codex-sessions/`，逻辑名为 `codex-sessions/<safe-entry>`。用户明确指定项目内另一个主题目录时，遵从该位置并保持一致。禁止使用跨项目的 global 目录，禁止路径穿越。
-- 在目标仓库或 worktree 的准确根目录激活 Serena：首次使用时先读 `initial_instructions`，再用绝对路径调用 `activate_project`。遵守已有 Memory maintenance；先 `list_memories` 并 `read_memory` 检查维护说明和旧记录。每个去重会话默认用 Serena `write_memory` 创建摘要；已存在时按本规约维护。只有当前用户明确要求仅只读参考或禁止持久化时跳过写入。写后回读确认，并按 thread ID 查找已有记录以避免重复。
+- 按 [`code-understanding.md`](code-understanding.md) 确认 Serena 说明、session 参数及目标仓库/worktree 的准确项目绑定；已正确激活或启动绑定时复用，不因 Memory 任务自动执行 onboarding。遵守已有 Memory maintenance；先 `list_memories` 并 `read_memory` 检查维护说明和旧记录。每个去重会话默认用 Serena `write_memory` 创建摘要；已存在时按本规约维护。只有当前用户明确要求仅只读参考或禁止持久化时跳过写入。写后回读确认，并按 thread ID 查找已有记录以避免重复。
 - 若 Serena 配置的数据目录不在 `.serena`，应报告它与当前存储目标冲突并澄清，不得声称已写入预期位置。Memory 工具缺失或失败时，不得用 shell 或普通文件写入替代；报告缺口并停止依赖持久化的操作。
 - 每个去重会话对应一份中文摘要。文件/Memory 名使用路径安全的创建时间、结束时间或 `unknown`、标题 slug 和 thread ID；模板为 `<safe-created_at>-<safe-ended_at-or-unknown>-<title-slug>-<thread-id>`。完整链接只放在正文，不把原始含 `/`、`:` 的 URL 直接用作名称。用户明确禁止持久化时，不创建或更新摘要。
 
