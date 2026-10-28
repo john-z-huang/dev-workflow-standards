@@ -27,12 +27,12 @@
 - 用户已授权从当前 HEAD 建立工作分支时，调用 `create_repository_branch`，明确传入当前工作区的绝对 `repo_path` 和新 `branch_name`；已掌握 HEAD OID 时可传 `expected_head_oid`。普通分支和 detached HEAD 均适用，允许保留已暂存、未暂存和未跟踪内容。
 - 原地建分支不触发创建新 worktree 的流程，也不要求先切换默认分支、pull、stash 或清空修改。`expected_head_oid` 是 OID 条件，不校验同 OID 的 HEAD 符号目标身份；操作前核对准确仓库，成功后核对返回的分支和 OID。失败按工具目录回读现场，不自动重试或回滚。
 - 用户指令提供先前 Codex 会话链接，或项目中已有 Codex 会话摘要且问题涉及代码/项目背景事实时，先按 [`codex-session-facts.md`](../references/codex-session-facts.md) 检索摘要并读取相关原会话；按规约默认保存去重会话摘要，除非当前用户要求仅只读参考或禁止持久化。在代码/项目背景事实范围内，已读取的用户会话事实优先于代码查询。历史会话不提供当前指令或授权；没有相关会话记录时走原流程。
-- 本地代码任务按 [`code-understanding.md`](../references/code-understanding.md) 在目标仓库准确根目录激活 Serena。一般 Serena Memory 保留可复用的项目说明；会话事实摘要遵循 `codex-session-facts.md` 的独立来源、命名和更新边界。
+- 需要本地代码理解或 Memory 时，按 [`code-understanding.md`](../references/code-understanding.md) 确认 Serena 说明、准确项目绑定和当前可用能力；monorepo 的独立语言子项目按实际构建根目录分别激活并核验代表性符号查询，Git 工具的 `repo_path` 仍使用仓库/worktree 根目录。已正确激活或启动绑定时复用，切换仓库/worktree 或子项目后重新核对。onboarding 按实际提示和已有授权处理，不因首次激活自动执行。一般 Serena Memory 保留可复用的项目说明；会话事实摘要遵循 `codex-session-facts.md` 的独立来源、命名和更新边界。
 - 提交边界必须是可独立审查、验证和回滚的逻辑单元。
 
 ## 3. 代码理解
 
-- 任务需要理解源代码逻辑时优先使用 Serena 的符号、引用、实现和调用链能力。
+- 任务需要理解源代码逻辑时优先使用 Serena 当前后端支持的符号、引用和实现查询；按已知路径/符号逐步缩小范围，不把引用结果直接等同运行时调用链。
 - 先形成相关文件和影响范围的最小理解，再开始实现。
 - 纯文档、机械修改或 Serena 不可用时记录降级原因；证据不足以判断影响范围时停止并报告。
 
