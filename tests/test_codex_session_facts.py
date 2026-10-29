@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import json
+import asyncio
 import re
 import inspect
 import subprocess
+import sys
 import tempfile
 import unittest
 from unittest import IsolatedAsyncioTestCase
@@ -12,6 +14,7 @@ from pathlib import Path
 from typing import get_type_hints
 from unittest.mock import patch
 from pydantic import create_model
+from mcp import Client, StdioServerParameters
 
 from dev_workflow_standards_tools.services import codex_session_facts as service, validation, workflows
 from dev_workflow_standards_tools.services.codex_session_facts import (
@@ -373,6 +376,33 @@ class MemoryPreparationTests(unittest.TestCase):
 
 class MCPRegistrationTests(IsolatedAsyncioTestCase):
     A = "00000000-0000-4000-8000-000000000005"
+
+    async def test_issue_pr_metadata_over_stdio_initialize_and_tools_list(self) -> None:
+        from dev_workflow_standards_tools.services.ai_workflow import ContentGenerationRequest
+
+        params = StdioServerParameters(
+            command=sys.executable,
+            args=["-m", "dev_workflow_standards_tools.server"],
+            cwd=ROOT / "mcp-server",
+            env={},
+        )
+        async with asyncio.timeout(20), Client(params) as client:
+            self.assertEqual(client.server_info.name, "dev-workflow-standards-tools")
+            for phrase in ("Issue", "PR", "最小充分", "默认中文", "language_override", "needs_revision", "两次"):
+                self.assertIn(phrase, client.instructions)
+            tools = {tool.name: tool for tool in (await client.list_tools()).tools}
+        tool = tools["generate_skill_content"]
+        for phrase in ("前后行为", "复现", "实际验证", "user_provided", "默认中文", "adoptable", "quality_review", "不会读写", "OPENAI_BASE_URL"):
+            self.assertIn(phrase, tool.description)
+        schema_text = json.dumps(tool.input_schema, ensure_ascii=False)
+        for phrase in ("language_override", "instruction_ref", "language", "user_provided", "实际/期望/影响", "已完成diff", "默认中文"):
+            self.assertIn(phrase, schema_text)
+        for marker, kind in (("Issue示例：", "issue"), ("PR示例：", "pr")):
+            example, _ = json.JSONDecoder().raw_decode(tool.description.split(marker, 1)[1])
+            self.assertEqual(ContentGenerationRequest.model_validate(example["request"]).kind, kind)
+        self.assertTrue(tool.annotations.read_only_hint)
+        self.assertTrue(tool.annotations.open_world_hint)
+        self.assertFalse(tool.annotations.idempotent_hint)
 
     async def test_all_32_tools_registered_with_described_schemas(self) -> None:
         self.assertIn("本地开发工作流 MCP 服务", complete_server.description)

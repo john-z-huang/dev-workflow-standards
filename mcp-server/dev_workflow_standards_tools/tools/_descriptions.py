@@ -14,6 +14,8 @@ SERVER_INSTRUCTIONS = """
 
 **选择与顺序**
 
+起草 Issue/PR 前先收集最小充分的真实项目事实与来源指针，再调用 `generate_skill_content`，无需先写整篇正文。通用事实包括用户目标/受众、背景/组件、路径/符号、范围/非目标、约束和关联项；事实、反馈、推测与建议分开。Issue 先区分缺陷与功能/变更请求：描述实际/期望/影响或目标/动机，环境与复现仅提交已知证据。PR 提供具体前后行为、已完成 diff/文件摘要及原因、实际验证命令/结果和未运行项、已知兼容风险与关联 Issue。缺失和冲突如实标注，不要求全仓库/完整会话或敏感配置。标题和自然语言正文默认中文，英文材料/模板/Agent 请求不构成其他语言授权；明确用户语言要求须通过 language_override 引用 user_provided 指令原文。技术原文保留。工具不自行读取项目上下文；Issue/PR 经生成与语义审查两次固定 gpt-6-luna Responses.parse 请求，ok=true 仍须检查 quality_status/adoptable 并人工审阅，needs_revision 不可直接发布，审查异常失败关闭。后续 Memory、Git、Issue/PR 写入继续使用相应专用工具并满足既有授权。
+
 **只读查询的覆盖边界**
 
 优先使用已可用且覆盖所需查询的 MCP 工具或已授权 Connector。若它们没有覆盖当前只读查询，可在当前任务和目标仓库范围内使用受限的 `git`/`gh` CLI 读取；无需为每次这类只读查询重复询问业务授权。各工作流指定的审计和检查门禁仍须在规定步骤完成；补充查询可收集后续门禁所需事实，但不能替代门禁或把失败门禁判为通过。缺少覆盖与工具不可用、权限/认证/网络/仓库状态/参数校验失败是不同情况；失败时不得改走 CLI 绕过门禁或失败原因。只读查询仍受适用的宿主 approval、sandbox 和更高优先级约束；这些约束不因只读性质豁免。
@@ -184,7 +186,12 @@ TOOL_DESCRIPTIONS: dict[str, str] = {
     ),
     "generate_skill_content": (
         "为 issue、pr、commit_message、plan、handoff 或 session_summary 生成结构化候选文本，适合已有明确证据、需要起草而非执行时。request.evidence 必须非空；每项 origin 标明来源，ref 唯一。session_summary 必须提供 source.created_at 与 source.title；source.thread_id 可从 source_link 推导；只接受对应 thread 的 provided_session 证据。"
-        "user_request 定目标，focus_questions/output_format 可自定义重点/结构；它们不增加事实。仅当 ok=true 才有 candidate；candidate.title 是标题，candidate.content 是正文（commit_message 的正文可为空）。candidate.used_evidence_refs 仅列实际支持文本的输入引用；candidate.missing_facts 列完成请求所需但证据缺失的事实；candidate.review_notes 列需 Agent 核对的要点。拒绝/截断/坏引用/本地 commit 格式失败均看 error_code。Responses.parse 联网；不会写文件、Memory、Git/GitHub 或执行候选动作。示例：{\"request\":{\"kind\":\"plan\",\"user_request\":\"基于证据列计划\",\"evidence\":[{\"reference_id\":\"turn:2\",\"content\":\"用户提出合成目标\",\"origin\":\"user_provided\"}]}}。"
+        "调用前按类型准备事实，不必先写正文：通用为目标/受众、背景/组件、路径/符号指针、范围/非目标、约束和关联项；每项标明事实/推测、来源和缺失/冲突。Issue区分缺陷/功能请求，给实际/期望/影响或能力/动机，复现和环境仅限已知；PR给前后行为、已完成diff/文件摘要与原因、实际验证命令/结果和未运行项、已知兼容风险及关联Issue。不提交全仓库、完整会话或敏感配置。"
+        "user_request定目标，focus_questions/output_format的用户重点/结构优先于默认；不增加事实。Issue/PR标题与自然语言正文默认中文，英文模板/错误/Agent请求不授权改语言，技术标识/路径/代码/错误原文保留。仅当用户明确要求其他语言时提供language_override={language,instruction_ref}，引用evidence内origin=user_provided的指令原文；省略/null用中文，其他kind禁止此字段。引用来源本地校验，指令语义由模型核对。"
+        "ok=true仅表示候选和审查返回有效，candidate.title/content是标题/正文（commit_message正文可空）；used_evidence_refs只列支撑内容的输入引用，missing_facts列必要缺失/冲突，review_notes列修订要点。Issue/PR另含quality_status=ready_for_agent_review或needs_revision、adoptable和quality_review（language_compliant/evidence_supported/coverage_sufficient为模型建议）。任何缺项或否定检查均不可直接采纳，修改/补证后再审阅；通过也不是发布授权。不以字数判质量。拒绝/截断/坏引用/本地commit失败/审查异常看error_code且不可采纳，无自动重试或换模型。"
+        "通过统一客户端Responses.parse联网调用OpenAI；每次强制读取OPENAI_API_KEY与OPENAI_BASE_URL，显式传SDK且固定gpt-6-luna。Issue/PR生成后再做一次有界语义审查，其余kind一次请求。不会读写文件/仓库、Memory、会话、执行Git/GitHub或候选动作；仅处理传入事实，后续写入另需授权。"
+        "Issue示例：{\"request\":{\"kind\":\"issue\",\"user_request\":\"为维护者起草导出功能需求\",\"evidence\":[{\"reference_id\":\"U1\",\"content\":\"用户希望导出筛选结果，避免手动复制；仅涉及报表组件。验收条件尚未确认。\",\"origin\":\"user_provided\"}]}}。"
+        "PR示例：{\"request\":{\"kind\":\"pr\",\"user_request\":\"为评审者起草说明\",\"evidence\":[{\"reference_id\":\"D1\",\"content\":\"src/report.py的diff将空输入从抛错改为返回空列表，避免空报表失败；范围仅该函数。执行python -m unittest tests.test_report：通过。未运行集成测试；关联#12；暂无已知兼容风险。\",\"origin\":\"current_observation\"}]}}。以上路径/编号/结果均为合成示例，实际调用必须替换为已核实事实。"
     ),
 }
 
@@ -325,7 +332,7 @@ PARAMETER_DESCRIPTIONS: dict[str, dict[str, str]] = {
         "request": "严格结构化历史查找/持久化状态。必填 flags 为布尔值；relevant_facts_found 的 null 表示未知，false 表示已知未发现；origin 区分 original_session/current_session/none。",
     },
     "generate_skill_content": {
-        "request": "严格结构化候选请求；kind限定六种类型，evidence需1–100项且引用唯一，文本有长度上限。session_summary必须含 source 且所有证据同属该thread。custom focus/format不会改变事实边界。",
+        "request": "严格结构化候选请求；kind限定六种类型，evidence需1–100项且引用唯一。Issue准备实际/期望/影响或能力/动机；PR准备前后行为、已完成diff、真实验证/未运行项与风险，附来源指针而非先写正文。Issue/PR默认中文，language_override仅用于引用user_provided的明确用户语言指令；null/省略不改语言。session_summary必须含source且证据同thread。自定义重点/结构优先，不改变事实边界；文本有长度上限。",
     },
 }
 
