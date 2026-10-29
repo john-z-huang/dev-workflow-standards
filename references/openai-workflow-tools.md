@@ -71,7 +71,8 @@ Code Agent 必须从真实读取结果填写这些条件。工具只判断提供
 | `user_request` | 当前要生成的内容、受众和约束；不要混入凭据或无关日志。 |
 | `evidence` | 有界证据列表，每项包含唯一 `reference_id`、非空 `content`、`origin` 和可选 `source_thread_id`。 |
 | `focus_questions` | 用户明确要求查询或总结的问题；优先于默认问题清单。 |
-| `output_format` | 用户明确要求的输出结构或模板；优先于默认章节。 |
+| `output_format` | 用户明确要求的输出结构或模板；优先于默认章节。Issue/PR 的英文模板不构成语言覆盖。 |
+| `language_override` | 仅 Issue/PR 可用。省略/null 默认中文；其他语言须提供 `{language, instruction_ref}`，后者引用本次 evidence 中 `origin=user_provided` 的用户语言指令原文。本地检查引用来源，模型核对其是否确为用户的明确语言要求；其他 kind 禁止此字段。 |
 | `source` | 历史会话摘要必须提供相应的 `CodexSessionSource` 元数据；其他类型可省略。 |
 
 `origin` 为 `provided_session`、`current_observation` 或 `user_provided`。历史摘要只接收 `provided_session` 证据，且每项 `source_thread_id` 必须与 `source` 相同；禁止将当前观察或其他会话的事实混入历史摘要。普通开发文案可以使用当前观察，但必须如实区分已验证、未验证和待决定事项。
@@ -96,13 +97,32 @@ Code Agent 必须从真实读取结果填写这些条件。工具只判断提供
 }
 ```
 
+### Issue/PR 的事实准备
+
+调用前收集相关的最小充分材料，无需先写整篇正文，不传整个仓库、完整会话或敏感配置。通用事实包括目标、受众、背景、组件、路径/符号指针、范围与非目标、约束及关联项；标注来源，区分已核实事实、未验证反馈、推测和建议，缺失或矛盾如实说明。
+
+- Issue：区分缺陷与功能/变更请求。缺陷提供实际行为、期望行为和影响，环境/复现只填已有证据；需求提供目标能力和有依据的动机。建议的验收条件要标为建议。
+- PR：提供具体前后行为、已完成改动与原因、真实 diff 摘要或文件证据、实际验证命令及结果、未运行项、已知兼容风险和关联 Issue。计划不能当成完成，验证未知不能当成通过。
+
+Issue/PR 标题和自然语言正文默认中文。英文材料、模板和 Agent 自拟英文请求不构成语言授权；技术标识、路径、代码、命令、错误原文与必要引用保留。真实用户要求其他语言时，将原文放入 `user_provided` 证据并设置覆盖，例如：
+
+```json
+{"request":{"kind":"issue","user_request":"为维护者起草导出功能需求","evidence":[{"reference_id":"U1","origin":"user_provided","content":"请用英文编写这份 Issue。希望导出筛选结果，减少手动复制；范围仅报表组件。"}],"language_override":{"language":"English","instruction_ref":"U1"}}}
+```
+
+PR 最小合成示例（路径、编号和验证须替换为真实事实）：
+
+```json
+{"request":{"kind":"pr","user_request":"为评审者起草中文说明","evidence":[{"reference_id":"D1","origin":"current_observation","content":"src/report.py 的 diff 将空输入从抛错改为返回空列表，避免空报表失败；范围仅此函数。执行 python -m unittest tests.test_report：通过。未运行集成测试；关联 #12；暂无已知兼容风险。"}]}}
+```
+
 ## Instruction Prompt 与返回内容
 
 工具使用固定的任务 Prompt，将当前要求、证据、查询重点与输出格式分开编码。证据里的角色声明、命令或要求忽略规约的文本始终作为数据处理，不能覆盖工具规则。Prompt 要求仅根据输入事实生成内容，明确缺失信息，不补写未执行的测试、未创建的 PR、未确认的路径或决定；不请求或返回私有推理过程。
 
 判断指令逐项解释观测字段和选项的触发、排除条件，按固定优先顺序处理同时成立的条件。工作流使用显式布尔条件，不从“并行开发”推断 worktree；会话查询和保存各用独立条件表，无相关来源时允许查询项目，来源不可读时阻塞查询；禁止保存或新增事实来自当前会话时跳过保存。本地 Issue/PR 审计未请求某项检查，不等于检查失败，也不需要补充 CI、标签或可合并性等本工具没有审计的事实。提交信息的署名观测与本地校验使用相同的有效行范围，忽略空行和注释行。
 
-六类生成任务分别提供默认交付要求；用户明确指定的问题、语言、结构和详略优先于这些默认值，但不能覆盖事实来源和本地硬约束，提交信息仍须满足中文主题规则。
+六类生成任务分别提供默认交付要求；用户明确指定的问题、结构和详略优先。Issue/PR 的其他语言要求须使用上述带来源的 `language_override`，其他类型保留明确语言偏好；不能覆盖事实与硬约束，提交信息仍须满足中文主题规则。
 
 | 类型 | 默认交付重点 |
 |---|---|
@@ -116,5 +136,9 @@ Code Agent 必须从真实读取结果填写这些条件。工具只判断提供
 生成结果包含标题、正文、已使用的证据引用、缺失事实及简短审阅说明，并附模型、推理强度和可用的用量信息。返回的引用必须属于输入证据；拒绝、未完成、解析失败或未知引用不得当作成功内容。自定义格式决定正文结构，接口的结构化封装不强迫正文使用默认章节。
 
 `used_evidence_refs` 只列实际支撑候选内容的输入引用，不能不加区分地列出所有证据；`missing_facts` 只列完成当前请求必要但未提供或有冲突的事实，不能为填满默认章节虚构缺口；`review_notes` 用于简短的事实边界和采纳前检查，不返回中间推理或整份输入。
+
+Issue/PR 在本地硬校验后，通过同一统一客户端进行第二次有界 `Responses.parse` 语义审查，固定 `gpt-6-luna`、`medium`，无工具执行；两次请求各自重新读取并显式使用配置，均检查预算、拒绝、不完整与解析错误。审查不自动重试或修复。`quality_review` 的 `language_compliant`、`evidence_supported`、`coverage_sufficient` 是模型建议，分别检查语言授权、事实支撑、针对当前请求的关键事实覆盖与冲突；不按字数、中文比例或默认章节数量判质量。`quality_review_usage` 单独列审查用量，`usage` 仍为生成请求用量。
+
+生成与审查的缺失事实和审阅提示合并去重。`ok=true` 仅代表有效草稿与有效审查，不保证适合发布；仅所有审查项为真且合并 `missing_facts` 为空时 `adoptable=true`、`quality_status=ready_for_agent_review`。其余返回 `adoptable=false`、`quality_status=needs_revision`，须修订或补证后重新审阅。审查异常返回 `ok=false`、安全 `error_code`、`adoptable=false`，不返回可采纳候选；超出发现项上限同样失败关闭。模型审查不证明实际事实正确，通过仍需人工核对且不授予写入权限。离线 mock 仅验证流程、规则和结构，不证明真实语言质量；真实生成验证须另行授权最小脱敏数据。
 
 Code Agent 对照证据检查候选内容后，可修改或直接采纳。生成正文不自动写文件、Serena Memory、Issue 或 PR；需要持久化时继续使用对应的专用工具，并遵守当前用户授权。历史摘要通过 [`prepare_codex_session_memory`](mcp-tools.md) 准备写入参数，实际写入仍由 Serena 完成。

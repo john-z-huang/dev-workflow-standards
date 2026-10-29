@@ -12,7 +12,7 @@
 |---|---|---|
 | `decide_skill_workflow` | 强类型 `request`：用户请求、明确 worktree、GitHub 交付、仅验证、特殊操作和阻塞条件 | Decisions 固定选项中的工作流分支，供 Agent 核对后采用。 |
 | `decide_codex_session_action` | 强类型 `request`：历史读取状态、事实覆盖、保存限制和新增事实来源 | Decisions 的查询与持久化分支；不能用当前新事实更新历史摘要。 |
-| `generate_skill_content` | 强类型 `request`：内容种类、用户要求、带引用的证据、查询重点、输出格式及可选会话来源 | Responses 结构化生成的标题、正文、引用、缺失事实与审阅说明，供 Agent 优化或采纳。 |
+| `generate_skill_content` | 强类型 `request`：内容种类、用户目标/受众、分类型项目事实与来源、查询重点、格式、可选会话来源；Issue/PR 其他语言须 `language_override` 引用用户原文 | Responses 结构化候选；Issue/PR 生成后另做一次有界语义审查，须检查 `quality_status`/`adoptable` 与缺失项，`ok=true` 不等于可发布。不会自行读取仓库。 |
 
 `check_branch_names`、`check_commit_message`、`audit_issue_pr_policy` 的公开参数保持不变：先执行原本地硬校验，通过后再调用 Decisions。API 结果不能放宽本地失败，API 不可用时不能默认为通过。其余精确计算、Git 写操作和 Hook 不迁移到模型。详细输入范式、Instruction Prompt、强度配置及错误边界见 [`openai-workflow-tools.md`](openai-workflow-tools.md)。
 
