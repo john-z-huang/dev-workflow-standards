@@ -4,6 +4,38 @@
 
 工作流判断与开发文案生成通过 OpenAI Python SDK 完成：判断使用 Decisions API，生成使用 Responses API。所有请求固定为 `gpt-6-luna`，强制在调用时读取 `OPENAI_API_KEY` 和 `OPENAI_BASE_URL`；缺少任意配置即拒绝请求，不使用默认凭据、默认地址或其他模型。Decisions 使用接口自身机制，生成按任务复杂度显式指定推理强度，默认 `medium`。
 
+## 独立安装 Skill
+
+仓库可以位于任意开发目录。Skill 的唯一指令源在 [`skills/dev-workflow-standards/`](skills/dev-workflow-standards/)，构建时封装进发布包，安装后为普通文件快照，不引用开发仓库。
+
+从本地源码构建 wheel 和 sdist（默认先构建 sdist，再从它构建 wheel）：
+
+```text
+uv build ./mcp-server --out-dir ./dist
+```
+
+取得构建产物后，在任意目录安装工具；以下 wheel 路径替换为实际绝对路径。本项目不假定已有公开包索引。
+
+```text
+uv tool install /absolute/path/dev_workflow_standards_tools-0.2.0-py3-none-any.whl
+dev-workflow-standards skills install --dry-run
+dev-workflow-standards skills install
+dev-workflow-standards skills show
+```
+
+默认目标为 `~/.agents/skills/dev-workflow-standards`；`--target /absolute/path/dev-workflow-standards` 可指定完整目标目录。首次安装拒绝所有已有目标，包括旧 Skill、Git checkout 和未知非空目录；不会自动迁移、覆盖或删除旧项目。`~/.codex/skills` 不作为默认自定义安装位置，显式选择兼容路径时也执行同样的保护检查。
+
+安装软件包不会自动更新已安装指令。升级工具后，显式运行：
+
+```text
+dev-workflow-standards skills update --dry-run
+dev-workflow-standards skills update
+```
+
+显式目标安装的，查看和更新也要传同一 `--target`。更新只接受本工具管理且未修改的完整安装；用户修改、额外内容、链接或特殊文件都会阻止覆盖。macOS/Linux 通过原子目录发布保全原安装，不支持的文件系统/平台不降级执行。预览不写文件，独立 Skill 安装离线且不注册 MCP、不读取 OpenAI 凭据、不安装 Hook。旧版共存、中断残留和人工迁移边界见 [完整安装说明](skills/dev-workflow-standards/references/installation.md)。
+
+`dev-workflow-standards` 是独立管理入口；原 `dev-workflow-standards-tools` 仍直接启动 stdio MCP。安装 Skill 后，需要 MCP 功能的仍须按下一节注册服务。
+
 ## Codex 中安装
 
 推荐通过本仓库的 [Codex 安装配置脚本](scripts/setup-codex-mcp.py) 一次完成 uv tool 安装、MCP 注册和环境变量转发配置：
@@ -70,13 +102,13 @@ uv tool uninstall dev-workflow-standards-mcp
 
 ## 使用
 
-使用 [`SKILL.md`](SKILL.md) 时按 [`workflows/index.md`](workflows/index.md) 选择工作流，再按 [`references/mcp-tools.md`](references/mcp-tools.md) 调用对应工具。所有仓库操作都要传入本次目标项目的绝对 `repo_path`；服务器不会把启动时的目录当作目标仓库。
+使用 [`SKILL.md`](skills/dev-workflow-standards/SKILL.md) 时按 [`workflows/index.md`](skills/dev-workflow-standards/workflows/index.md) 选择工作流，再按 [`references/mcp-tools.md`](skills/dev-workflow-standards/references/mcp-tools.md) 调用对应工具。所有仓库操作都要传入本次目标项目的绝对 `repo_path`；服务器不会把启动时的目录当作目标仓库。
 
-Python 执行和依赖环境任务按需读取 [`references/python-environment.md`](references/python-environment.md)，Shell 脚本开发和验证按需读取 [`references/shell-environment.md`](references/shell-environment.md)。独立脚本无需先进入 Git 工作流；非开发任务不增加环境规则加载步骤。
+Python 执行和依赖环境任务按需读取 [`references/python-environment.md`](skills/dev-workflow-standards/references/python-environment.md)，Shell 脚本开发和验证按需读取 [`references/shell-environment.md`](skills/dev-workflow-standards/references/shell-environment.md)。独立脚本无需先进入 Git 工作流；非开发任务不增加环境规则加载步骤。
 
-Git/GitHub 写操作必须先满足工作流中的用户授权和执行层审批；已有授权在原范围内持续有效。服务只接受固定领域参数，不提供任意 shell、git、gh 或项目测试命令。固定写操作和强制门禁使用规定工具；查询优先用 MCP 或已授权 Connector，未覆盖的只读信息查询可按 [`只读查询规约`](references/read-only-queries.md) 使用 CLI，无须逐次申请额外的业务授权。工具不可用、权限/认证/网络/状态/校验失败时停止对应步骤，不通过 CLI 绕过。
+Git/GitHub 写操作必须先满足工作流中的用户授权和执行层审批；已有授权在原范围内持续有效。服务只接受固定领域参数，不提供任意 shell、git、gh 或项目测试命令。固定写操作和强制门禁使用规定工具；查询优先用 MCP 或已授权 Connector，未覆盖的只读信息查询可按 [`只读查询规约`](skills/dev-workflow-standards/references/read-only-queries.md) 使用 CLI，无须逐次申请额外的业务授权。工具不可用、权限/认证/网络/状态/校验失败时停止对应步骤，不通过 CLI 绕过。
 
-已在当前 checkout 开始工作、需要从当前 HEAD 原地建立工作分支时，使用 `create_repository_branch`。它支持 detached HEAD 和普通分支，保留已暂存、未暂存及未跟踪内容；只新增本地分支并改变 HEAD，不创建其他 checkout。它与切换已有分支的 `switch_repository_branch`、创建新目录的 `create_repository_worktree` 分别适用不同场景。参数、OID 并发条件、Hook 限制和失败后的回读要求见 [`MCP 工具目录`](references/mcp-tools.md#原地创建工作分支)。
+已在当前 checkout 开始工作、需要从当前 HEAD 原地建立工作分支时，使用 `create_repository_branch`。它支持 detached HEAD 和普通分支，保留已暂存、未暂存及未跟踪内容；只新增本地分支并改变 HEAD，不创建其他 checkout。它与切换已有分支的 `switch_repository_branch`、创建新目录的 `create_repository_worktree` 分别适用不同场景。参数、OID 并发条件、Hook 限制和失败后的回读要求见 [`MCP 工具目录`](skills/dev-workflow-standards/references/mcp-tools.md#原地创建工作分支)。
 
 只读按完整子命令、参数、配置和副作用判定：`status` 避免可选 index 写回，差异展示禁用外部 diff/textconv，`fetch` 仍属本地写入；REST 显式 GET，GraphQL 审阅 query/mutation；凭据、文件输出和复合步骤不自动豁免。这是 Agent 操作规范，不是新增命令解析器。用户全局 AGENTS 或已安装 Skill 仍有限制时继续遵守并报告；本仓库修改不自动更新全局规则或重载已安装服务。
 
@@ -92,7 +124,7 @@ Git/GitHub 写操作必须先满足工作流中的用户授权和执行层审批
 - `order_codex_session_sources`：按 thread ID 去重，按明确的会话创建时间排序；元数据冲突、缺失或时间相同时提示需要澄清。
 - `prepare_codex_session_memory`：校验来源、项目路径与 Memory 名称，生成 Serena 写入参数；不读取原会话、不写入文件或 Memory。
 
-原会话通过宿主的 `read_thread` 工具读取，实际保存仍通过 Serena 的项目激活、Memory 读取、写入与回读完成。这些辅助工具只能校验结构，不能证明摘要忠实于原文，也不能授予持久化权限。工具签名见 [`references/mcp-tools.md`](references/mcp-tools.md)，事实来源和更新边界见 [`references/codex-session-facts.md`](references/codex-session-facts.md)。
+原会话通过宿主的 `read_thread` 工具读取，实际保存仍通过 Serena 的项目激活、Memory 读取、写入与回读完成。这些辅助工具只能校验结构，不能证明摘要忠实于原文，也不能授予持久化权限。工具签名见 [`references/mcp-tools.md`](skills/dev-workflow-standards/references/mcp-tools.md)，事实来源和更新边界见 [`references/codex-session-facts.md`](skills/dev-workflow-standards/references/codex-session-facts.md)。
 
 ### API 判断与生成工具
 
@@ -102,17 +134,52 @@ Git/GitHub 写操作必须先满足工作流中的用户授权和执行层审批
 
 MCP 的分支名、提交信息和 Issue/PR 策略检查在本地硬校验通过后调用 Decisions；API 失败不能返回通过。原始本地校验服务、Hook、Git 写工具的前置检查及不联网的会话辅助工具保持确定性执行。API 工具不执行生成内容里的命令，不自动创建 Issue/PR 或保存 Memory。
 
-MCP 进程必须能继承上述两个环境变量；不要把真实值写入仓库。API 只接收调用者显式提交的必要事实，不自动发送整个仓库或会话。输入字段、Prompt 边界、返回结果与推理强度配置见 [`references/openai-workflow-tools.md`](references/openai-workflow-tools.md)。
+MCP 进程必须能继承上述两个环境变量；不要把真实值写入仓库。API 只接收调用者显式提交的必要事实，不自动发送整个仓库或会话。输入字段、Prompt 边界、返回结果与推理强度配置见 [`references/openai-workflow-tools.md`](skills/dev-workflow-standards/references/openai-workflow-tools.md)。
 
 若手动运行成功，但 Codex 调用返回 `missing_api_key`，先检查上面的 `env_vars` 转发配置、Codex 主进程的变量存在性，以及服务是否已重新加载。uv tool 安装提供独立的执行环境，不会替 MCP 客户端补齐凭据。`missing_api_key` 表示服务进程中的 Key 缺失或为空，请求尚未发送；Key 检查先于 Base URL，因此两项都缺失时也只返回 `missing_api_key`。Key 存在而 Base URL 缺失时返回 `missing_base_url`。排查时只检查存在性和非空状态，不输出配置值；不要通过给服务增加凭据文件回退来绕过环境要求。
 
 ## 项目结构
 
-- `SKILL.md`：短入口、共用边界和加载顺序。
-- `workflows/`：保留场景判断、先后依赖、授权和完成条件。
-- `references/`：按需加载的决策细节和 MCP 工具名/参数映射。
+- `skills/dev-workflow-standards/SKILL.md`：唯一 Skill 入口、共用边界和加载顺序。
+- `skills/dev-workflow-standards/workflows/`：场景判断、先后依赖、授权和完成条件。
+- `skills/dev-workflow-standards/references/`：按需加载的决策细节、独立安装说明和 MCP 工具映射。
 - `mcp-server/`：Python/uv MCP v2 stdio 服务和固定操作工具。
 - `archive/mcp-server-ts/`：已归档且不再支持的历史 TypeScript MCP 实现；其历史说明见该目录的 [`README.md`](archive/mcp-server-ts/README.md)。
 - `scripts/`：Codex 安装配置脚本，以及供标准 Git Hook 集成使用的可移植校验资产；`.githooks/`：Hook 入口。
 
-当前 MCP 服务实现与调用约束见 [`mcp-server/pyproject.toml`](mcp-server/pyproject.toml) 和 [`references/mcp-tools.md`](references/mcp-tools.md)。
+当前 MCP 服务实现与调用约束见 [`mcp-server/pyproject.toml`](mcp-server/pyproject.toml) 和 [`references/mcp-tools.md`](skills/dev-workflow-standards/references/mcp-tools.md)。
+
+## 本地验证
+
+在 `mcp-server/` 使用项目环境运行离线测试：
+
+```text
+uv sync --managed-python
+uv run --managed-python -- python -m unittest discover -s ../tests -v
+```
+
+构建测试会在临时目录生成并解包 sdist、重建 wheel、安装到隔离环境后运行 CLI，不会写入现有用户 Skill 目录。
+
+`uv sync` 的可编辑开发环境不提供已封装的 Skill 快照；安装命令需从完整 wheel 安装的工具运行。资源缺失时安装器会拒绝执行，不从源码目录回退读取。
+
+### Codex SDK 集成测试
+
+Codex Python SDK 仅在 `codex-test` 测试依赖组中声明，测试驱动位于 `tests/codex_sdk_smoke.py`；运行时不导入 SDK，发布包不依赖 SDK，也不包含测试驱动。SDK 及匹配的 CLI 版本由 `mcp-server/uv.lock` 锁定。普通离线测试不安装该依赖组、不启动 Codex 或发起模型请求。
+
+先按上面的命令构建 wheel，再从 `mcp-server/` 执行：
+
+```text
+uv run --locked --group codex-test -- python ../tests/codex_sdk_smoke.py --wheel ../dist/dev_workflow_standards_tools-0.2.0-py3-none-any.whl
+```
+
+默认只执行 SDK/CLI 初始化、临时 MCP 注册、工具发现和直接工具调用，不发起模型请求。测试将 wheel 安装到临时目录，核对加载的确是该安装，再使用临时 Codex 配置和只读测试工作区；不读取原用户的 Codex 配置、登录文件或修改现有 Skill 安装。仅暴露不联网、不读历史、不写 Memory 的 `get_codex_session_summary_guidance` 工具，输入为合成问题和模板。
+
+需要真实模型端到端检查时显式添加 `--live`：
+
+```text
+uv run --locked --group codex-test -- python ../tests/codex_sdk_smoke.py --wheel ../dist/dev_workflow_standards_tools-0.2.0-py3-none-any.whl --live
+```
+
+所有 SDK 测试固定模型 `gpt-6-luna`、推理强度 `medium`，不接受命令行或环境变量覆盖，也不自动切换模型。两种模式都要求当前进程提供非空的 `OPENAI_API_KEY` 与 `OPENAI_BASE_URL`；每次读取并显式配置测试 provider，不使用默认地址或其他登录凭据。真实值不写入仓库或配置文件，不输出原始 SDK/HTTP 错误。
+
+`--live` 会发起真实模型请求并产生相应费用。测试检查 Codex 回读的模型/推理强度、MCP 发现结果、直接调用结果及模型实际发出的 `item/completed` 工具调用事件；模型仅回复“测试通过”不会被采纳。失败不重试或回退；总时限为 120 秒。输出仅含安全状态、固定模型/强度和实际工具调用计数。普通离线测试另覆盖配置缺失时零启动、环境读取、模型限制、错误脱敏及发布包依赖隔离。
