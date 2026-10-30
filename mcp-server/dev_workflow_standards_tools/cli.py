@@ -4,7 +4,7 @@ import argparse
 import json
 import sys
 
-from .services.skill_installation import SkillError, manage_skill
+from .services.skill_installation import DEFAULT_DIRECTORY, SkillError, manage_skill
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -18,7 +18,7 @@ def main(argv: list[str] | None = None) -> int:
         ("show", "只读查看包版本、目标状态和已安装版本"),
     ):
         command = commands.add_parser(action, help=help_text)
-        command.add_argument("--target", help="完整目标目录；默认 ~/.agents/skills/dev-workflow-standards")
+        command.add_argument("--target", help=f"完整目标目录；默认 ~/.agents/skills/{DEFAULT_DIRECTORY}")
         if action != "show":
             command.add_argument("--dry-run", action="store_true", help="完整预检但不创建目录、锁或文件")
     args = parser.parse_args(argv)

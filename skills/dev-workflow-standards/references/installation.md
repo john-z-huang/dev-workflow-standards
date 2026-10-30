@@ -13,7 +13,7 @@ dev-workflow-standards skills install
 dev-workflow-standards skills show
 ```
 
-默认目标为 `~/.agents/skills/dev-workflow-standards`。`--target /absolute/path/dev-workflow-standards` 指定完整目标目录；支持显式选择兼容目录，但不默认写入 `~/.codex/skills`，也不覆盖任何已有目标。路径不得含 `..`、符号链接祖先或位于 Git checkout 内。父目录可由正式安装创建；预览和查看不创建目录或锁文件。
+默认目标为 `~/.agents/skills/dev-workflow-standards-skill`。`--target /absolute/path/dev-workflow-standards-skill` 指定完整目标目录；支持显式选择兼容目录，但不默认写入 `~/.codex/skills`，也不覆盖任何已有目标。路径不得含 `..`、符号链接祖先或位于 Git checkout 内。父目录可由正式安装创建；预览和查看不创建目录或锁文件。目录后缀不改变 `SKILL.md` 中的技能名称，源码指令目录也保持不变。
 
 命令离线读取包资源，不读取 OpenAI 凭据、不调用 OpenAI、不注册 MCP、不修改 Codex 配置，也不复制或启用 Hook。安装器写入资源、受管清单及同目标的持久锁文件。macOS/Linux 使用原子目录发布；其他平台或不支持原子操作的文件系统拒绝写入，不退回非原子覆盖。
 
@@ -33,7 +33,7 @@ dev-workflow-standards skills show
 
 ## 现有 Skill 和中断处理
 
-已有 `~/.agents/skills/dev-workflow-standards` 不会被自动迁移、覆盖或删除。先保留旧项目；需要共存时可选择独立目标或隔离的 Skill 根目录，但目录名变化不会改变 `SKILL.md` 的技能名称。避免同时让 Codex 加载两份同名 Skill；现有绝对路径引用不会自动调整。人工迁移和全局指令变更需另行确认。
+已有 `~/.agents/skills/dev-workflow-standards` 是受保护的旧项目路径，不会被自动迁移、覆盖或删除。即使显式传入该路径、它的子路径或会覆盖它的父目录，或目录中已有受管清单，也会拒绝操作；解析到同一旧项目位置的目标同样受保护。使用新的默认目录 `~/.agents/skills/dev-workflow-standards-skill` 安装独立快照。避免同时让 Codex 加载两份同名 Skill；现有绝对路径引用不会自动调整。人工迁移和全局指令变更需另行确认。
 
 安装/更新使用同目标的合作进程锁，竞争时失败而非排队覆盖。原子交换前后正式目录均为完整快照；强制终止可能留下 `.名称.skill-stage-*` 副本。先用 `skills show` 检查正式安装并人工核对副本，再决定如何处理；工具不自动清理未知残留。锁文件保留以维持同一锁身份，不应在安装进程运行时删除。
 

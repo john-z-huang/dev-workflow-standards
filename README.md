@@ -23,7 +23,7 @@ dev-workflow-standards skills install
 dev-workflow-standards skills show
 ```
 
-默认目标为 `~/.agents/skills/dev-workflow-standards`；`--target /absolute/path/dev-workflow-standards` 可指定完整目标目录。首次安装拒绝所有已有目标，包括旧 Skill、Git checkout 和未知非空目录；不会自动迁移、覆盖或删除旧项目。`~/.codex/skills` 不作为默认自定义安装位置，显式选择兼容路径时也执行同样的保护检查。
+默认目标为 `~/.agents/skills/dev-workflow-standards-skill`；`--target /absolute/path/dev-workflow-standards-skill` 可指定完整目标目录。旧项目路径 `~/.agents/skills/dev-workflow-standards` 及会覆盖它的目标受到保护，即使显式指定或已有受管清单也不能作为安装/更新目标；指向同一位置的链接不能绕过保护。首次安装仍拒绝所有已有目标，不会自动迁移、覆盖或删除旧项目。`~/.codex/skills` 不作为默认自定义安装位置，显式选择兼容路径时也执行同样的保护检查。
 
 安装软件包不会自动更新已安装指令。升级工具后，显式运行：
 

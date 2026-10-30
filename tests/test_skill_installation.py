@@ -50,20 +50,63 @@ class SkillInstallationTests(unittest.TestCase):
         self.manage("install", dry_run=True)
         self.assertEqual(list(self.root.iterdir()), [])
 
-    def test_existing_unknown_empty_nonempty_and_old_default_are_preserved(self):
+    def test_existing_unknown_empty_and_nonempty_directories_are_preserved(self):
         self.target.mkdir(parents=True)
         with self.assertRaises(service.SkillError):
             self.manage("install")
         (self.target / "SKILL.md").write_text("old development version")
         for action in ("install", "update", "show"):
-            with self.subTest(action=action), patch.object(Path, "home", return_value=self.root):
-                old_default = self.root / ".agents" / "skills" / service.SKILL
-                if not old_default.exists():
-                    old_default.mkdir(parents=True)
-                    (old_default / "SKILL.md").write_text("old development version")
+            with self.subTest(action=action):
                 with self.assertRaises(service.SkillError):
-                    service.manage_skill(action)
-                self.assertEqual((old_default / "SKILL.md").read_text(), "old development version")
+                    self.manage(action)
+                self.assertEqual((self.target / "SKILL.md").read_text(), "old development version")
+
+    def test_default_install_and_update_use_new_directory_and_preserve_old_project(self):
+        legacy = self.root / ".agents" / "skills" / service.SKILL
+        legacy.mkdir(parents=True)
+        (legacy / "SKILL.md").write_text("old project")
+        (legacy / ".git").mkdir()
+        with patch.object(Path, "home", return_value=self.root):
+            expected = self.root / ".agents" / "skills" / "dev-workflow-standards-skill"
+            result = service.manage_skill("install", dry_run=True)
+            self.assertEqual(result["target"], str(expected))
+            self.assertFalse(expected.exists())
+            service.manage_skill("install")
+            self.assertEqual(service.manage_skill("show")["target"], str(expected))
+            with patch.object(service, "_bundle", return_value=bundle("2", b"new snapshot")):
+                service.manage_skill("update")
+            self.assertEqual((expected / "SKILL.md").read_bytes(), b"new snapshot")
+        self.assertEqual((legacy / "SKILL.md").read_text(), "old project")
+        self.assertEqual(sorted(path.name for path in legacy.iterdir()), [".git", "SKILL.md"])
+
+    def test_explicit_legacy_targets_are_blocked_even_with_valid_managed_manifest(self):
+        legacy = self.root / ".agents" / "skills" / service.SKILL
+        manifest, payload = bundle()
+        for name, data in payload.items():
+            path = legacy / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(data)
+        (legacy / service.MARKER).write_bytes(service._manifest_bytes(manifest))
+        before = service._snapshot(legacy)
+        with patch.object(Path, "home", return_value=self.root):
+            for target in (legacy, legacy / "nested", legacy.parent):
+                for action in ("install", "update"):
+                    with self.subTest(target=target, action=action), self.assertRaisesRegex(service.SkillError, "旧项目目录受保护"):
+                        service.manage_skill(action, str(target))
+        self.assertEqual(service._snapshot(legacy), before)
+
+    def test_resolved_legacy_directory_cannot_be_used_as_explicit_target(self):
+        actual = self.root / "old-checkout"
+        actual.mkdir()
+        (actual / "SKILL.md").write_text("old project")
+        legacy = self.root / ".agents" / "skills" / service.SKILL
+        legacy.parent.mkdir(parents=True)
+        legacy.symlink_to(actual, target_is_directory=True)
+        with patch.object(Path, "home", return_value=self.root):
+            for target in (actual, legacy):
+                with self.subTest(target=target), self.assertRaisesRegex(service.SkillError, "旧项目目录受保护"):
+                    service.manage_skill("install", str(target))
+        self.assertEqual((actual / "SKILL.md").read_text(), "old project")
 
     def test_git_checkout_target_and_ancestor_are_refused(self):
         self.target.mkdir(parents=True)

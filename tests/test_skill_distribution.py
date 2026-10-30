@@ -103,7 +103,7 @@ class SkillDistributionTests(unittest.TestCase):
             cli = venv / "bin" / "dev-workflow-standards"
             run(["uv", "pip", "install", "--offline", "--python", str(python), "--no-deps", str(wheels[0])])
             # 该环境没有 OpenAI/MCP 依赖，管理命令仍应独立工作。
-            target = root / "new-home" / ".agents" / "skills" / "dev-workflow-standards"
+            target = root / "new-home" / ".agents" / "skills" / "dev-workflow-standards-skill"
             args = [str(cli), "skills"]
             run([*args, "install", "--target", str(target), "--dry-run"])
             self.assertFalse(target.parent.exists())
