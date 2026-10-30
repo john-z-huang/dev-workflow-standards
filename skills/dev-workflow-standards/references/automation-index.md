@@ -1,6 +1,6 @@
 # 自动化与兼容资产
 
-交互式 Skill 工作流的固定写操作和强制 Git/GitHub 门禁使用 [`mcp-tools.md`](mcp-tools.md) 中的专用工具；未覆盖的补充查询按 [`read-only-queries.md`](read-only-queries.md) 处理。下面的脚本仍保留在仓库，供现有 Hook 或兼容集成使用；只读豁免不授权用这些脚本替代门禁、写工具或绕过工具失败。
+交互式 Skill 工作流的固定写操作和强制 Git/GitHub 门禁使用 [`mcp-tools.md`](mcp-tools.md) 中的专用工具；未覆盖的补充查询按 [`read-only-queries.md`](read-only-queries.md) 处理。下面的脚本仍保留在源码仓库，供现有 Hook 或兼容集成使用；表内路径均相对源码仓库根目录，不是安装后 Skill 内的文件，来源见 [安装说明](installation.md#mcp-与源码辅助脚本)。只读豁免不授权用这些脚本替代门禁、写工具或绕过工具失败。
 
 | 兼容资产 | 用途 / 对应 MCP 工具 |
 |---|---|

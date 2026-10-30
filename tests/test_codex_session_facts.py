@@ -27,7 +27,7 @@ from dev_workflow_standards_tools.server import mcp as complete_server
 
 
 ROOT = Path(__file__).parents[1]
-DOC = ROOT / "references" / "codex-session-facts.md"
+DOC = ROOT / "skills" / "dev-workflow-standards" / "references" / "codex-session-facts.md"
 
 
 def tool_json(result) -> dict:

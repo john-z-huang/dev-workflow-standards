@@ -8,6 +8,8 @@ description: >-
 
 # 通用开发规范
 
+本目录是可独立安装的指令快照；安装、显式更新和旧目录保护见 [`references/installation.md`](references/installation.md)。安装 Skill 不注册 MCP、不复制 Hook，也不自动迁移旧项目。
+
 本 Skill 保留场景判断、执行顺序、授权边界和完成条件。固定写操作和强制门禁交给专用 MCP 服务；补充只读查询按 [`references/read-only-queries.md`](references/read-only-queries.md) 选择入口，不重建已有工具覆盖的操作。
 
 ## 必须执行
